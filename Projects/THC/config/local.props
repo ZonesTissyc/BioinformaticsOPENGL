@@ -3,7 +3,6 @@
     <ClCompile>
       <AdditionalIncludeDirectories>
         $(SolutionDir)..\..\include;
-        $(SolutionDir)..\..\src;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
     </ClCompile>
