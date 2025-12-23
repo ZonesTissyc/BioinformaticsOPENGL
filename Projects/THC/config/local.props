@@ -1,0 +1,23 @@
+﻿<Project>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+        $(SolutionDir)..\..\include;
+        $(SolutionDir)..\..\src;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+
+    <Link>
+      <AdditionalLibraryDirectories>
+        $(SolutionDir)..\..\thirdLibrary\glfw-3.4\libs;
+        %(AdditionalLibraryDirectories)
+      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+        glfw3.lib;
+        opengl32.lib;
+        %(AdditionalDependencies)
+      </AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>
