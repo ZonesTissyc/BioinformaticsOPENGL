@@ -1,8 +1,9 @@
 # 第三方库
 
-/threeLibrary/*
-!/threeLibrary/**/*.md
-!/threeLibrary/**/*.gitkeep
+/thirdLibrary/**/*
+!/thirdLibrary/**/
+!/thirdLibrary/**/*.md
+!/thirdLibrary/**/*.gitkeep
 
 .vs/
 *.user
