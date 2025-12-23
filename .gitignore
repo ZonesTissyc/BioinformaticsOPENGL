@@ -1,0 +1,30 @@
+# 第三方库
+
+/thirdLibrary/**/*
+!/thirdLibrary/**/
+!/thirdLibrary/**/*.md
+!/thirdLibrary/**/*.gitkeep
+
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+x64/
+Debug/
+Release/
+.vscode
+
+# ===== Build =====
+build/
+bin/
+Debug/
+Release/
+x64/
+
+# ===== C/C++ =====
+*.o
+*.obj
+*.exe
+*.out
+*.pdb
