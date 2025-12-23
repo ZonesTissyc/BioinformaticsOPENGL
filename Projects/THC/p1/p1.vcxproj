@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\codelab\LearnOpengl\projects\project\基础框架\main.cpp" />
     <ClCompile Include="..\..\..\src\glad.c" />
+    <ClCompile Include="p1.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
