@@ -79,13 +79,13 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    string vs_url = R"(..\..\..\shaders\1.model_loading.vs)";
-    string fs_url = R"(..\..\..\shaders\1.model_loading.fs)";
+    string vs_url = R"(../../../shaders/1.model_loading.vs)";
+    string fs_url = R"(../../../shaders/1.model_loading.fs)";
     Shader ourShader(vs_url.c_str(), fs_url.c_str());
 
     // load models
     // -----------
-    string obj_url = R"(..\..\..\resources\model\backpack\backpack.obj)";
+    string obj_url = R"(../../../resources/model/backpack/backpack.obj)";
     Model ourModel(obj_url.c_str());
 
 
