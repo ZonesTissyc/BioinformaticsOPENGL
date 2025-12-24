@@ -35,7 +35,7 @@ x64/
 *.exe
 *.out
 *.pdb
-
+*.dll
 # ==== Python ====
 
 __pycache__/
