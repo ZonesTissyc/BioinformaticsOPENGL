@@ -5,6 +5,13 @@
 !/thirdLibrary/**/*.md
 !/thirdLibrary/**/*.gitkeep
 
+# ==== 模型文件 ====
+
+/resources/**/*
+!/resources/**/
+!/resources/**/*.json
+!/resources/**/*.gitkeep
+
 .vs/
 *.user
 *.suo
