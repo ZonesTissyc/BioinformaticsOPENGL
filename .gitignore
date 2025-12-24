@@ -1,4 +1,4 @@
-# 第三方库
+# ==== 第三方库 ====
 
 /thirdLibrary/**/*
 !/thirdLibrary/**/
@@ -28,3 +28,23 @@ x64/
 *.exe
 *.out
 *.pdb
+
+# ==== Python ====
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+.venv/
+venv/
+env/
+ENV/
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+.env
+.env.*
