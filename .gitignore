@@ -1,9 +1,16 @@
-# 第三方库
+# ==== 第三方库 ====
 
 /thirdLibrary/**/*
 !/thirdLibrary/**/
 !/thirdLibrary/**/*.md
 !/thirdLibrary/**/*.gitkeep
+
+# ==== 模型文件 ====
+
+/resources/**/*
+!/resources/**/
+!/resources/**/*.json
+!/resources/**/*.gitkeep
 
 .vs/
 *.user
@@ -28,3 +35,23 @@ x64/
 *.exe
 *.out
 *.pdb
+
+# ==== Python ====
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+.venv/
+venv/
+env/
+ENV/
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+.env
+.env.*

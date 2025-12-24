@@ -1,0 +1,11 @@
+{
+    "version" : "1.0",
+    "files" : [
+        {
+            "typename" : "mtl",
+            "filename" : "backpack.zip",
+            "url" : "https://alist.ztcdream.com/d/local/opengl/model/backpack.zip?sign=gKuYUBfgBGCl4U-W-h5FSq_ce1SI9CvAFaNBPV09BgQ=:0",
+            "unzip" : true
+        }
+    ]
+}
