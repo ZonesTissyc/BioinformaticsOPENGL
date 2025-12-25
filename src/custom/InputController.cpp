@@ -44,7 +44,7 @@ void InputController::processKeyboardInput(GLFWwindow* window, float deltaTime) 
         pos += up * velocity;
     }
 
-    // 将计算后的新位置设置回 Camera 实例
+    // 返回实例
     controlledCamera_.setPos(pos);
 }
 
