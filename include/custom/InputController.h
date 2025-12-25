@@ -2,7 +2,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include "Camera.h" // 需要包含 Camera 类的头文件
+#include <custom/Camera.h> // 需要包含 Camera 类的头文件
 
 class InputController {
 private:
