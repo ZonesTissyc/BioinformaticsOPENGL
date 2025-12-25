@@ -1,5 +1,5 @@
 ﻿// InputController v 1.2
-#include "InputController.h"
+#include <custom/InputController.h>
 #include <glm/glm.hpp>
 
 // 核心方法实现
