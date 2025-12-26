@@ -1,13 +1,13 @@
 {
     "version" : "1.0",
-    "description" : "learnopengl改版的书包模型",
+    "description" : "赛博风的实验室",
     "files" : [
         {
-            "typename" : "mtl",
-            "filename" : "backpack.zip",
+            "typename" : "glb",
+            "filename" : "sci-fi_lab.glb",
             "url" : "https://alist.ztcdream.com/d/local/opengl/model/backpack.zip?sign=gKuYUBfgBGCl4U-W-h5FSq_ce1SI9CvAFaNBPV09BgQ=:0",
             "unzip" : true,
-            "from" : "https://learnopengl-cn.github.io/data/backpack.zip"
+            "from" : "https://sketchfab.com/3d-models/sci-fi-lab-a676e149e343403bb5e57686f3d31da5"
         }
     ]
 }
