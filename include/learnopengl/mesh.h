@@ -1,4 +1,4 @@
-#ifndef MESH_H
+﻿#ifndef MESH_H
 #define MESH_H
 
 #include <glad/glad.h> // holds all OpenGL type declarations
@@ -32,7 +32,7 @@ struct Vertex {
 };
 
 struct Texture {
-    unsigned int id;
+    unsigned int id = 0;
     string type;
     string path;
 };

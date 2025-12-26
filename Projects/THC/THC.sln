@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p2_书包模型", "p2_书�
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p3", "p3\p3.vcxproj", "{DE06FA07-26FA-433A-9529-1D928716B33F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p4_glb实验室", "p4_glb实验室\p4_glb实验室.vcxproj", "{4E9AB6D1-6E21-466E-9936-2A48D89483D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -73,6 +75,24 @@ Global
 		{DE06FA07-26FA-433A-9529-1D928716B33F}.ww|x64.Build.0 = Debug|x64
 		{DE06FA07-26FA-433A-9529-1D928716B33F}.ww|x86.ActiveCfg = Debug|Win32
 		{DE06FA07-26FA-433A-9529-1D928716B33F}.ww|x86.Build.0 = Debug|Win32
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Debug|ARM.ActiveCfg = Debug|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Debug|ARM.Build.0 = Debug|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Debug|x64.ActiveCfg = Debug|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Debug|x64.Build.0 = Debug|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Debug|x86.ActiveCfg = Debug|Win32
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Debug|x86.Build.0 = Debug|Win32
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Release|ARM.ActiveCfg = Release|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Release|ARM.Build.0 = Release|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Release|x64.ActiveCfg = Release|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Release|x64.Build.0 = Release|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Release|x86.ActiveCfg = Release|Win32
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.Release|x86.Build.0 = Release|Win32
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.ww|ARM.ActiveCfg = Debug|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.ww|ARM.Build.0 = Debug|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.ww|x64.ActiveCfg = Debug|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.ww|x64.Build.0 = Debug|x64
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.ww|x86.ActiveCfg = Debug|Win32
+		{4E9AB6D1-6E21-466E-9936-2A48D89483D0}.ww|x86.Build.0 = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

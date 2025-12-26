@@ -18,8 +18,8 @@ private:
     float sensitivity_ = 0.1f;   // 鼠标灵敏度
 public:
    
-    InputController(Camera& camera, float speed)
-        : controlledCamera_(camera), cameraSpeed_(speed) {
+    InputController(Camera& camera, float speed, float sensitivity = 0.1f)
+        : controlledCamera_(camera), cameraSpeed_(speed), sensitivity_(sensitivity) {
     }
 
     // 处理键盘输入
