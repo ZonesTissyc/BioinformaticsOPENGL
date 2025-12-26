@@ -9,7 +9,21 @@ public:
         initGLFW();
         createWindow(width, height, title);
         initGLAD();
+
         initCallbacks();
+    }
+
+    bool noClose() const {
+        return !glfwWindowShouldClose(window);
+	}
+
+    void swapBuffers(bool isPoll = true)
+    {
+        glfwSwapBuffers(window);
+        if (isPoll)
+        {
+            glfwPollEvents();
+        }
     }
 
     ~Window() {
@@ -49,6 +63,7 @@ private:
                 throw std::runtime_error("GLAD init failed");
             gladInitialized = true;
         }
+		glEnable(GL_DEPTH_TEST);    // 默认启用深度测试
     }
 
     #pragma region 窗口可调节回调函数

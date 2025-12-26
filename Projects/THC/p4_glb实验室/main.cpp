@@ -26,7 +26,7 @@ int main() {
 	shader1.setMat4("view", camera.getView());
 	shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
 	shader1.setMat4("model", glm::mat4(1.0f));
-	while (1) {
+	while (window.noClose()) {
 		controller.processKeyboardInput(window.get(), 0.01); // 更新相机
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -37,7 +37,7 @@ int main() {
 
 		model.Draw(shader1);
 
-		glfwSwapBuffers(window.get());
-		glfwPollEvents();
+		window.swapBuffers();
+		
 	}
 }
