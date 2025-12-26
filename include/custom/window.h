@@ -48,12 +48,14 @@ private:
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     }
 
-    void createWindow(int w, int h, const char* title) {
+    void createWindow(int w, int h, const char* title, bool getMouse = true) {
         window = glfwCreateWindow(w, h, title, nullptr, nullptr);
         if (!window)
             throw std::runtime_error("Window creation failed");
 
         glfwMakeContextCurrent(window);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);    // 捕获鼠标输入
+
     }
 
     void initGLAD() {
@@ -65,6 +67,8 @@ private:
         }
 		glEnable(GL_DEPTH_TEST);    // 默认启用深度测试
     }
+
+    
 
     #pragma region 窗口可调节回调函数
     void initCallbacks() {
