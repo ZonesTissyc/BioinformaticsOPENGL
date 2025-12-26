@@ -24,7 +24,7 @@ public:
 
     void rotateAroundPoint(float x, float y, float z,
         float angle, float rotX, float rotY, float rotZ,
-        float scalex = 1.0f, float scaley = 1.0f, float scalez= 1.0f);
+        float scalex, float scaley , float scalez);
 
     glm::mat4 getModelMatrix() const
     {
