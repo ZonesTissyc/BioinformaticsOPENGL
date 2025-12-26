@@ -12,6 +12,14 @@
 !/resources/**/*.json
 !/resources/**/*.gitkeep
 
+# 不上传模型文件
+*.obj
+*.glb
+*.gltf
+*.png
+*.jpg
+
+# ==== 调试文件 ====
 .vs/
 *.user
 *.suo
