@@ -5,8 +5,8 @@
         {
             "typename" : "glb",
             "filename" : "sci-fi_lab.glb",
-            "url" : "https://alist.ztcdream.com/d/local/opengl/model/backpack.zip?sign=gKuYUBfgBGCl4U-W-h5FSq_ce1SI9CvAFaNBPV09BgQ=:0",
-            "unzip" : true,
+            "url" : "https://alist.ztcdream.com/d/local/opengl/model/sci-fi_lab.glb?sign=2v121651PN1FCbv1Pob9tLbnl66EjI18Pl1wl_9irRg=:0",
+            "unzip" : false,
             "from" : "https://sketchfab.com/3d-models/sci-fi-lab-a676e149e343403bb5e57686f3d31da5"
         }
     ]
