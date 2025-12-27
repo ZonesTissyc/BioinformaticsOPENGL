@@ -18,10 +18,10 @@ int main() {
 	std::string vsURL = rootURL + "anim_model.vs";
 	std::string fsURL = rootURL + "anim_model.fs";
 	Shader shader1(vsURL.c_str(), fsURL.c_str());
-
+	stbi_set_flip_vertically_on_load(true);
 	// 使用 custom::Camera（不包含 learnopengl 的 camera.h，避免重定义）
 	Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
-	InputController controller(camera, 0.5f, 0.2f);
+	InputController controller(camera, 2.6f, 0.2f);
 
 	// 加载模型（骨骼）与动画（从同一 glb 文件读取）
 	Model model("soilder.glb");
