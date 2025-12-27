@@ -1,30 +1,30 @@
 #include "ModelTrans.h"
 
 
-void ModelTrans::translate(float x, float y, float z) {
-    modelMatrix = modelMatrix * glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+void ModelTrans::translate(const glm::vec3& translation) {
+    modelMatrix = glm::translate(modelMatrix, translation);
 }
 
 
-void ModelTrans::rotate(float angle, float x, float y, float z) {
-    modelMatrix = modelMatrix * glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(x,y,z));
+void ModelTrans::rotate(float angle, const glm::vec3& axis) {
+    float rad = glm::radians (angle);
+    modelMatrix = glm::rotate(modelMatrix,rad ,axis);
 }
 
-void ModelTrans::scale(float x, float y, float z) {
-     modelMatrix = modelMatrix * glm::scale(glm::mat4(1.0f),  glm::vec3(x,y,z));
+void ModelTrans::scale(const glm::vec3& scaleFactors) {
+     modelMatrix =  glm::scale(modelMatrix, scaleFactors);
 }
 
-void ModelTrans::rotateAroundPoint(float x, float y, float z,
-    float angle, float X, float Y , float Z,
-    float scalex = 1.0f, float scaley = 1.0f, float scalez = 1.0f)
+void ModelTrans::rotateAroundPoint(const glm::vec3& point, float angle, const glm::vec3& axis, const glm::vec3& scaleFactors)
 {
-    glm::mat4 transToOrigin = glm::translate(glm::mat4(1.0f), glm::vec3(-x, -y, -z));
-   
-    glm::mat4 rotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(X, Y,Z));
- 
-    glm::mat4 transBack = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+    glm::mat4 transToOrigin = glm::translate(modelMatrix, -point);
+    float rad = glm::radians(angle);
+    glm::mat4 rotateMat = glm::rotate(modelMatrix, rad, axis);
+    glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scaleFactors);
+  
+    glm::mat4 transBack = glm::translate(modelMatrix, point);
 
-    glm::mat4 aroundPointMat = transToOrigin * rotateMat * transBack;
+    glm::mat4 aroundPointMat = transToOrigin * rotateMat * scaleMat * transBack;
 
     modelMatrix = modelMatrix * aroundPointMat;
 }

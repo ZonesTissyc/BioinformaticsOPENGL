@@ -16,13 +16,15 @@ public:
         modelMatrix = glm::mat4(1.0f);
     }
 
-    void translate(const glm::vec3& translation);
+    void translate(float x, float y, float z);
 
-    void rotate(float angle, const glm::vec3& axis);
+    void rotate(float angle, float x, float y, float z);
 
-    void scale(const glm::vec3& scaleFactors);
+    void scale(float x, float y, float z);
 
-    void rotateAroundPoint(const glm::vec3& point, float angle, const glm::vec3& axis, const glm::vec3& scaleFactors);
+    void rotateAroundPoint(float x, float y, float z,
+        float angle, float rotX, float rotY, float rotZ,
+        float scalex, float scaley , float scalez);
 
     glm::mat4 getModelMatrix() const
     {

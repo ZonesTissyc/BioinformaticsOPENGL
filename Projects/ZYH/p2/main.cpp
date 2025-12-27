@@ -188,14 +188,13 @@ int main() {
 
        // glm::mat4 model = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
         modeltrans.reset();
-        //modeltrans.translate(0.5f, -0.5f, 0.0f);
-       //modeltrans.scale(0.5f, 0.5f, 0.5f);
-       //modeltrans.rotate(45.0f, 0.5f, 1.0f, 1.0f);
-        //modeltrans.rotateAroundPoint(1.0f, 0.5f, 0.0f, 45.0f, 0.0f, 1.0f, 0.0f,1.0f,1.0f,1.0f);
-        modeltrans.translate(2.0f, 1.0f, 0.0f);
-        modeltrans.scale(0.5f, 0.5f, 0.5f);
+        //modeltrans.translate(glm::vec3(0.5f, 1.0f, 0.0f));
+       // modeltrans.scale(glm::vec3(0.5f, 0.5f, 0.5f));
+       //modeltrans.rotate(45.0f, glm::vec3(0.5f, 1.0f, 1.0f));
+        modeltrans.rotateAroundPoint(glm::vec3(1.0f, 0.5f, 0.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f),glm::vec3(1.0f,1.0f,1.0f));
+       
         float angle = (float)glfwGetTime() * 180.0f; // 角度随时间变化
-        modeltrans.rotateAroundPoint(1.0f, 0.0f, 0.0f, angle, 0.0f, 1.0f, 0.0f, 2.0f, 2.0f, 2.0f);
+        modeltrans.rotateAroundPoint(glm::vec3(1.0f, 0.0f, 0.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f),glm::vec3( 1.0f, 1.0f, 1.0f));
         glm::mat4 model = modeltrans.getModelMatrix();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清除颜色缓、深度缓冲
