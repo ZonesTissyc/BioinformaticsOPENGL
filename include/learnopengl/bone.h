@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /* Container for bone data */
 
@@ -85,6 +85,8 @@ public:
 	
 
 
+	// 在 include/learnopengl/bone.h 中修改
+
 	int GetPositionIndex(float animationTime)
 	{
 		for (int index = 0; index < m_NumPositions - 1; ++index)
@@ -92,7 +94,8 @@ public:
 			if (animationTime < m_Positions[index + 1].timeStamp)
 				return index;
 		}
-		assert(0);
+		// 修改：如果超出范围，返回最后一个合法的索引，而不是崩溃
+		return m_NumPositions - 2; // 或者 return 0; 如果只有一个关键帧
 	}
 
 	int GetRotationIndex(float animationTime)
@@ -102,7 +105,7 @@ public:
 			if (animationTime < m_Rotations[index + 1].timeStamp)
 				return index;
 		}
-		assert(0);
+		return m_NumRotations - 2; // 修改
 	}
 
 	int GetScaleIndex(float animationTime)
@@ -112,7 +115,7 @@ public:
 			if (animationTime < m_Scales[index + 1].timeStamp)
 				return index;
 		}
-		assert(0);
+		return m_NumScalings - 2; // 修改
 	}
 
 
