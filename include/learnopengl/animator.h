@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <glm/glm.hpp>
 #include <map>
@@ -8,6 +8,8 @@
 #include <learnopengl/animation.h>
 #include <learnopengl/bone.h>
 
+#include <algorithm>
+
 class Animator
 {
 public:
@@ -16,9 +18,20 @@ public:
 		m_CurrentTime = 0.0;
 		m_CurrentAnimation = animation;
 
-		m_FinalBoneMatrices.reserve(100);
+		int maxBoneID = -1;
+		if (animation) // 检查 animation 是否为空
+		{
+			auto& boneMap = animation->GetBoneIDMap();
+			for (auto& item : boneMap)
+			{
+				if (item.second.id > maxBoneID)
+					maxBoneID = item.second.id;
+			}
+		}
+		int finalSize = std::max(100, maxBoneID + 1);
+		m_FinalBoneMatrices.reserve(finalSize);
 
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < finalSize; i++)
 			m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
 	}
 
