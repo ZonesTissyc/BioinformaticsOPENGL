@@ -120,12 +120,19 @@ private:
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
 			Vertex vertex;
+			// 初始化骨骼数据，防止垃圾值导致 Shader 崩溃
+			for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
+				vertex.m_BoneIDs[j] = -1;    // 默认无效索引
+				vertex.m_Weights[j] = 0.0f;  // 默认权重为 0
+			}
 			SetVertexBoneDataToDefault(vertex);
 			vertex.Position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
 			vertex.Normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals ? mesh->mNormals[i] : aiVector3D(0,0,0));
 			
-			if (mesh->mTextureCoords[0])
+			if (mesh->mTextureCoords[0] && mesh->mTangents)
 			{
+				vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+				vertex.Tangent.x = mesh->mTangents[i].x;
 				glm::vec2 vec;
 				vec.x = mesh->mTextureCoords[0][i].x;
 				vec.y = mesh->mTextureCoords[0][i].y;

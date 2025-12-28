@@ -132,10 +132,15 @@ private:
 
 	glm::mat4 InterpolatePosition(float animationTime)
 	{
+		// 【新增】处理没有关键帧的情况，返回单位矩阵或默认位移
+		if (0 == m_NumPositions)
+			return glm::mat4(1.0f);
 		if (1 == m_NumPositions)
 			return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 
 		int p0Index = GetPositionIndex(animationTime);
+		// 安全检查：防止返回负数索引
+		if (p0Index < 0) p0Index = 0;
 		int p1Index = p0Index + 1;
 		float scaleFactor = GetScaleFactor(m_Positions[p0Index].timeStamp,
 			m_Positions[p1Index].timeStamp, animationTime);
@@ -146,6 +151,9 @@ private:
 
 	glm::mat4 InterpolateRotation(float animationTime)
 	{
+		// 【新增】处理没有关键帧的情况
+		if (0 == m_NumScalings)
+			return glm::mat4(1.0f);
 		if (1 == m_NumRotations)
 		{
 			auto rotation = glm::normalize(m_Rotations[0].orientation);
@@ -153,6 +161,7 @@ private:
 		}
 
 		int p0Index = GetRotationIndex(animationTime);
+		if (p0Index < 0) p0Index = 0; // 安全检查
 		int p1Index = p0Index + 1;
 		float scaleFactor = GetScaleFactor(m_Rotations[p0Index].timeStamp,
 			m_Rotations[p1Index].timeStamp, animationTime);
@@ -165,10 +174,14 @@ private:
 
 	glm::mat4 InterpolateScaling(float animationTime)
 	{
+		// 【新增】处理没有关键帧的情况
+		if (0 == m_NumRotations)
+			return glm::mat4(1.0f);
 		if (1 == m_NumScalings)
 			return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 
 		int p0Index = GetScaleIndex(animationTime);
+		if (p0Index < 0) p0Index = 0; // // 安全检查
 		int p1Index = p0Index + 1;
 		float scaleFactor = GetScaleFactor(m_Scales[p0Index].timeStamp,
 			m_Scales[p1Index].timeStamp, animationTime);
