@@ -14,9 +14,9 @@
 
 int main() {
 	Window window(1280, 720, "animation");
-	std::string rootURL = R"(../../../shaders/)";
-	std::string vsURL = rootURL + "anim_model.vs";
-	std::string fsURL = rootURL + "anim_model.fs";
+	std::string rootURL = R"(../../../)";
+	std::string vsURL = rootURL + "shaders/anim_model.vs";
+	std::string fsURL = rootURL + "shaders/anim_model.fs";
 	Shader shader1(vsURL.c_str(), fsURL.c_str());
 	stbi_set_flip_vertically_on_load(true);
 	// 使用 custom::Camera（不包含 learnopengl 的 camera.h，避免重定义）
