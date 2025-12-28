@@ -25,7 +25,7 @@ int main() {
 	std::string glb1 = rootURL + "resources/model/npc-solder1/npc-solder1.glb";
 	std::string glb2 = rootURL + "resources/model/major-solder/major-solder.glb";
 	// 加载模型（骨骼）与动画（从同一 glb 文件读取）
-	std::string glbPath = glb2;
+	std::string glbPath = glb1;
 	Model model(glbPath);
 	Animation animation(glbPath, &model);
 	Animator animator(&animation);
