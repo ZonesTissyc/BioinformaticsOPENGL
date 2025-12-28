@@ -1,11 +1,11 @@
 {
     "version" : "1.0",
-    "description" : "赛博人物模型1",
+    "description" : "npc-士兵1号，会走路",
     "files" : [
         {
             "typename" : "glb",
-            "filename" : "sci-fi_solder.glb",
-            "url" : "https://alist.ztcdream.com/d/local/opengl/model/sci-fi_soldier.glb?sign=D5N9CIGnuY5xH7uwfe49BQ8E3WP03b1S7liFZXt6iIk=:0",
+            "filename" : "npc-solder1.glb",
+            "url" : "https://alist.ztcdream.com/d/local/opengl/model/npc-solder1.glb?sign=l1H64Uvyhjxm_rHXOJ05485AaUSI-4GJ60NQNnA3qmg=:0",
             "unzip" : false,
             "from" : "https://sketchfab.com/3d-models/stylized-sci-fi-soldier-animated-9e19e517429c4077b800273890186456"
         }

@@ -25,7 +25,7 @@ int main() {
 
 	// 加载模型（骨骼）与动画（从同一 glb 文件读取）
 	Model model(rootURL + "resources/model/sci-fi_solder/sci-fi_solder.glb");
-	Animation animation(rootURL + "resources/model/sci - fi_solder/sci-fi_solder.glb", &model);
+	Animation animation(rootURL + "resources/model/sci-fi_solder/sci-fi_solder.glb", &model);
 	Animator animator(&animation);
 
 	// 着色器预设（投影可在窗口大小变化时更新）
