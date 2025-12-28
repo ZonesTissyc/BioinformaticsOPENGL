@@ -11,6 +11,7 @@
 #include <custom/InputController.h>
 #include <custom/Camera.h>
 #include <custom/window.h>
+#include <custom/ModelTrans.h>
 
 int main() {
 	std::string rootURL = R"(../../../shaders/)";
@@ -21,6 +22,9 @@ int main() {
 	Camera camera(glm::vec3(1.0f, 1.0f, 2.0f));
 	InputController controller(camera, 0.5, 0.2);
 	Model model("sci-fi_lab.glb", true);
+	ModelTrans rotateMat1();
+	
+	
 
 	shader1.use();
 	shader1.setMat4("view", camera.getView());

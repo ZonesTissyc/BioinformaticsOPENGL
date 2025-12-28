@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\custom\Camera.cpp" />
     <ClCompile Include="..\..\..\src\custom\InputController.cpp" />
+    <ClCompile Include="..\..\..\src\custom\ModelTrans.cpp" />
     <ClCompile Include="..\..\..\src\glad.c" />
     <ClCompile Include="..\..\..\src\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
