@@ -40,8 +40,8 @@ void main()
 
         isAnimated = true;
    }
-   
-   if (!isAnimated) {
+    // 如果顶点没有被任何骨骼影响，或者计算结果仍为0，强制使用原始位置
+   if (!isAnimated || totalPosition == vec4(0.0f)) {
         totalPosition = vec4(pos, 1.0f);
     }
     mat4 viewModel = view * model;

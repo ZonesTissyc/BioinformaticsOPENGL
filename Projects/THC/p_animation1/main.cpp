@@ -11,6 +11,7 @@
 #include <learnopengl/shader_m.h>
 #include <learnopengl/animator.h>
 #include <learnopengl/model_animation.h>
+#include <custom/ModelTrans.h>
 
 int main() {
 	Window window(1280, 720, "animation");
@@ -20,14 +21,14 @@ int main() {
 	Shader shader1(vsURL.c_str(), fsURL.c_str());
 	stbi_set_flip_vertically_on_load(true);
 	// 使用 custom::Camera（不包含 learnopengl 的 camera.h，避免重定义）
-	Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
+	Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 	InputController controller(camera, 2.6f, 0.2f);
 	std::string glb1 = rootURL + "resources/model/npc-solder1/npc-solder1.glb";
 	std::string glb2 = rootURL + "resources/model/major-solder/major-solder.glb";
 	// 加载模型（骨骼）与动画（从同一 glb 文件读取）
-	std::string glbPath = glb1;
+	std::string glbPath = glb2;
 	Model model(glbPath);
-	Animation animation(glbPath, &model, 1);
+	Animation animation(glbPath, &model, 3);
 	Animator animator(&animation);
 
 	// 着色器预设（投影可在窗口大小变化时更新）
@@ -37,6 +38,8 @@ int main() {
 	// 计时
 	float lastFrame = static_cast<float>(glfwGetTime());
 
+	ModelTrans transmat;
+	transmat.scale(glm::vec3(2.0f, 2.0f, 2.0f));
 	while (window.noClose()) {
 		// deltaTime
 		float currentFrame = static_cast<float>(glfwGetTime());
@@ -60,7 +63,7 @@ int main() {
 
 		// 模型变换
 		glm::mat4 modelMat = glm::mat4(1.0f);
-		shader1.setMat4("model", modelMat);
+		shader1.setMat4("model", transmat.getModelMatrix());
 
 		// 上传骨骼矩阵到 shader（shader 中应声明 e.g. "uniform mat4 finalBonesMatrices[100];"）
 		auto finalMatrices = animator.GetFinalBoneMatrices();
