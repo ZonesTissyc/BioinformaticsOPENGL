@@ -1,0 +1,13 @@
+{
+    "version" : "1.0",
+    "description" : "多动画的士兵",
+    "files" : [
+        {
+            "typename" : "glb",
+            "filename" : "major-solder.glb",
+            "url" : "https://alist.ztcdream.com/d/local/opengl/model/major-solder.glb?sign=jlP3xiGxCv-xlXYhq_XmFUQhQM-aPlRg-mkufhXOdCI=:0",
+            "unzip" : false,
+            "from" : "https://sketchfab.com/3d-models/futuristic-soldier-free-6515eed4b6114d159de3e9f452c31571"
+        }
+    ]
+}
