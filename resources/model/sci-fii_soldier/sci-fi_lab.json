@@ -1,0 +1,13 @@
+{
+    "version" : "1.0",
+    "description" : "赛博人物模型1",
+    "files" : [
+        {
+            "typename" : "glb",
+            "filename" : "sci-fi_solder.glb",
+            "url" : "https://alist.ztcdream.com/d/local/opengl/model/sci-fi_soldier.glb?sign=D5N9CIGnuY5xH7uwfe49BQ8E3WP03b1S7liFZXt6iIk=:0",
+            "unzip" : false,
+            "from" : "https://sketchfab.com/3d-models/stylized-sci-fi-soldier-animated-9e19e517429c4077b800273890186456"
+        }
+    ]
+}
