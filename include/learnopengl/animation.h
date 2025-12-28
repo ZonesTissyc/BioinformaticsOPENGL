@@ -22,22 +22,30 @@ class Animation
 public:
 	Animation() = default;
 
-	Animation(const std::string& animationPath, Model* model)
+	Animation(const std::string& animationPath, Model* model, int indexAni = 0)
 	{
+		// index参数指定使用第几个动画。
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
 		assert(scene && scene->mRootNode);
-		if (scene->mNumAnimations <= 0) {
-			std::cout << "Error: The file does not contain any animations." << std::endl;
-			return; // 或者抛出异常
+		if (scene->mNumAnimations <= indexAni) {
+			std::cout << "Error: Animation index " << indexAni<< " out of range. File has " << scene->mNumAnimations << " animations." << std::endl;
+			return; // 抛出异常
 		}
-		auto animation = scene->mAnimations[0];
+		auto animation = scene->mAnimations[indexAni];
 		m_Duration = animation->mDuration;
 		m_TicksPerSecond = animation->mTicksPerSecond;
 		aiMatrix4x4 globalTransformation = scene->mRootNode->mTransformation;
 		globalTransformation = globalTransformation.Inverse();
 		ReadHierarchyData(m_RootNode, scene->mRootNode);
 		ReadMissingBones(animation, *model);
+
+		// 调试
+		std::cout << "Available Animations (" << scene->mNumAnimations << "):" << std::endl;
+		for (int i = 0; i < scene->mNumAnimations; i++) {
+			std::cout << " [" << i << "] Name: " << scene->mAnimations[i]->mName.C_Str()
+				<< " | Duration: " << scene->mAnimations[i]->mDuration << std::endl;
+		}
 	}
 
 	~Animation()
