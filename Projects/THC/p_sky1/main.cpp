@@ -134,7 +134,7 @@ int main() {
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
     std::string glbPath = glb2;
     Model model(glbPath);
-    Animation animation(glbPath, &model);
+    Animation animation(glbPath, &model, 1);
     Animator animator(&animation);
 
     // 着色器预设（投影可在窗口大小变化时更新）

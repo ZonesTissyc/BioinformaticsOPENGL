@@ -22,16 +22,16 @@ class Animation
 public:
 	Animation() = default;
 
-	Animation(const std::string& animationPath, Model* model)
+	Animation(const std::string& animationPath, Model* model, int indexAni = 0)
 	{
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
 		assert(scene && scene->mRootNode);
-		if (scene->mNumAnimations <= 0) {
-			std::cout << "Error: The file does not contain any animations." << std::endl;
+		if (scene->mNumAnimations <= indexAni) {
+			std::cout << "No more animations" << std::endl;
 			return; // 或者抛出异常
 		}
-		auto animation = scene->mAnimations[0];
+		auto animation = scene->mAnimations[indexAni];
 		m_Duration = animation->mDuration;
 		m_TicksPerSecond = animation->mTicksPerSecond;
 		aiMatrix4x4 globalTransformation = scene->mRootNode->mTransformation;
