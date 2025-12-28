@@ -18,6 +18,11 @@
 *.gltf
 *.png
 *.jpg
+*.zip
+*.fbx
+*.stl
+*.dae
+*.mtl
 
 # ==== 调试文件 ====
 .vs/
