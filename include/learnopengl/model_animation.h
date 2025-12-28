@@ -145,6 +145,12 @@ private:
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
 		vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
+		// 【新增修复】如果 Diffuse 为空，尝试加载 GLTF/GLB 的 PBR Base Color 纹理
+		if (diffuseMaps.empty())
+		{
+			// 注意：需确保 Assimp 版本较新 (5.0+)，支持 aiTextureType_BASE_COLOR
+			diffuseMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_diffuse", scene);
+		}
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 		vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
