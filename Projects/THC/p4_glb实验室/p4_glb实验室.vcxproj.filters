@@ -30,5 +30,8 @@
     <ClCompile Include="..\..\..\src\stb_image.cpp">
       <Filter>头文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\custom\ModelTrans.cpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
