@@ -131,12 +131,17 @@ int main() {
    
     std::string glb1 = rootURL + "resources/model/npc-solder1/npc-solder1.glb";
     std::string glb2 = rootURL + "resources/model/major-solder/major-solder.glb";
+    std::string glb3 = "futuristic_soldier_free _12mb.glb";
+    std::string glb4 = "export_solder2.glb";
+    std::string glb5 = "fbx_toglb.glb";
+    std::string glb6 = "fbx_toglb3.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
-    std::string glbPath = glb2;
+    std::string glbPath = glb6;
     Model model(glbPath);
-    Animation animation(glbPath, &model);
+    Animation animation(glbPath, &model, 3);
     Animator animator(&animation);
-
+    ModelTrans transmat;
+    transmat.scale(glm::vec3(4.0f, 4.0f, 4.0f));
     // 着色器预设（投影可在窗口大小变化时更新）
     shader1.use();
     shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
@@ -191,6 +196,7 @@ int main() {
         modelmat = glm::scale(modelmat, glm::vec3(0.2f)); // 缩小立方体
         lightShader.setMat4("model", modelmat);
 
+        
         // 绘制模型
         shader1.use();
         animator.UpdateAnimation(deltaTime);
@@ -200,7 +206,7 @@ int main() {
 
         // 模型变换
         glm::mat4 modelMat = glm::mat4(1.0f);
-        shader1.setMat4("model", modelMat);
+        shader1.setMat4("model", transmat.getModelMatrix());
 
         // 上传骨骼矩阵到 shader（shader 中应声明 e.g. "uniform mat4 finalBonesMatrices[100];"）
         auto finalMatrices = animator.GetFinalBoneMatrices();
@@ -211,6 +217,7 @@ int main() {
 
         // 绘制模型
         model.Draw(shader1);
+        
         // 绘制后36个顶点 (立方体)
         glDrawArrays(GL_TRIANGLES, 6, 36);
 
