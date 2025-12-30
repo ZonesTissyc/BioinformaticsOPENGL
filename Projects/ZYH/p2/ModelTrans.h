@@ -28,5 +28,10 @@ public:
     {
         return modelMatrix;
     }
+    
+    void setModelMatrix(const glm::mat4& matrix)
+    {
+        modelMatrix = matrix;
+    }
 };
 
