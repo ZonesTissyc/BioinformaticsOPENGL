@@ -123,8 +123,8 @@ int main() {
 
 
     std::string rootURL = R"(../../../)";
-    std::string vsURL = rootURL + "shaders/anim_model.vs";
-    std::string fsURL = rootURL + "shaders/anim_model.fs";
+    std::string vsURL ="anim_model.vs";
+    std::string fsURL = "anim_model.fs";
     Shader shader1(vsURL.c_str(), fsURL.c_str());
     stbi_set_flip_vertically_on_load(true);
     // 使用 custom::Camera（不包含 learnopengl 的 camera.h，避免重定义）
@@ -135,22 +135,29 @@ int main() {
     std::string glb4 = "export_solder2.glb";
     std::string glb5 = "fbx_toglb.glb";
     std::string glb6 = "fbx_toglb3.glb";
+    std::string glb7 = "fbx_to_color.glb";
+    std::string glb8 = "fbx_to_color2.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
-    std::string glbPath = glb6;
+    std::string glbPath = glb8;
     Model model(glbPath);
-    Animation animation(glbPath, &model, 3);
+    Animation animation(glbPath, &model, 0);
     Animator animator(&animation);
     ModelTrans transmat;
-    transmat.scale(glm::vec3(4.0f, 4.0f, 4.0f));
+    transmat.scale(glm::vec3(10.0f, 10.0f, 10.0f) * 1.0f);
     // 着色器预设（投影可在窗口大小变化时更新）
     shader1.use();
     shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
 
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // 6. 渲染循环
     // ------------------------------------------------------------------
     while (window.noClose()) {
+       
         // 计算帧时间
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
@@ -194,7 +201,7 @@ int main() {
         modelmat = glm::mat4(1.0f);
         modelmat = glm::translate(modelmat, lightPos);
         modelmat = glm::scale(modelmat, glm::vec3(0.2f)); // 缩小立方体
-        lightShader.setMat4("model", modelmat);
+        lightShader.setMat4("model", transmat.getModelMatrix());
 
         
         // 绘制模型
@@ -214,9 +221,10 @@ int main() {
             std::string name = "finalBonesMatrices[" + std::to_string(i) + "]";
             shader1.setMat4(name, finalMatrices[i]);
         }
-
+       
         // 绘制模型
         model.Draw(shader1);
+        
         
         // 绘制后36个顶点 (立方体)
         glDrawArrays(GL_TRIANGLES, 6, 36);

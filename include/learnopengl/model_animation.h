@@ -129,6 +129,7 @@ private:
 			vertex.Position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
 			vertex.Normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals ? mesh->mNormals[i] : aiVector3D(0,0,0));
 			
+			/*
 			if (mesh->mTextureCoords[0] && mesh->mTangents)
 			{
 				vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
@@ -140,7 +141,22 @@ private:
 			}
 			else
 				vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+			*/
+			// 修复后的代码
+			if (mesh->mTextureCoords[0])
+			{
+				vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+			}
+			else
+			{
+				vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+			}
 
+			if (mesh->mTangents)
+			{
+				vertex.Tangent = AssimpGLMHelpers::GetGLMVec(mesh->mTangents[i]);
+				vertex.Bitangent = AssimpGLMHelpers::GetGLMVec(mesh->mBitangents[i]);
+			}
 			vertices.push_back(vertex);
 		}
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
