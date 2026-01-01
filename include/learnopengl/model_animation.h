@@ -1,349 +1,326 @@
 ﻿#ifndef MODEL_H
 #define MODEL_H
 
-#include <glad/glad.h> 
+#include <glad/glad.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 #include <stb_image.h>
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 #include <learnopengl/mesh.h>
 #include <learnopengl/shader.h>
-
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <map>
-#include <vector>
 #include <learnopengl/assimp_glm_helpers.h>
 #include <learnopengl/animdata.h>
 
+#include <string>
+#include <iostream>
+#include <map>
+#include <vector>
+
 using namespace std;
 
-class Model 
+class Model
 {
 public:
-    // model data 
-    vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-    vector<Mesh>    meshes;
+    vector<Texture> textures_loaded;
+    vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
-	
-	
 
-    // constructor, expects a filepath to a 3D model.
-    Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
+    Model(string const& path, bool gamma = false)
+        : gammaCorrection(gamma)
     {
         loadModel(path);
     }
 
-    // draws the model, and thus all its meshes
-    void Draw(Shader &shader)
+    void Draw(Shader& shader)
     {
-        for(unsigned int i = 0; i < meshes.size(); i++)
-            meshes[i].Draw(shader);
+        for (auto& mesh : meshes)
+            mesh.Draw(shader);
     }
-    
-	auto& GetBoneInfoMap() { return m_BoneInfoMap; }
-	int& GetBoneCount() { return m_BoneCounter; }
-	
+
+    auto& GetBoneInfoMap() { return m_BoneInfoMap; }
+    int& GetBoneCount() { return m_BoneCounter; }
 
 private:
+    map<string, BoneInfo> m_BoneInfoMap;
+    int m_BoneCounter = 0;
 
-	std::map<string, BoneInfo> m_BoneInfoMap;
-	int m_BoneCounter = 0;
+    // ---------------- Model loading ----------------
 
-    // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-    void loadModel(string const &path)
+    void loadModel(string const& path)
     {
-        // read file via ASSIMP
         Assimp::Importer importer;
-		// 修改为（增加了 aiProcess_LimitBoneWeights）：
-		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_LimitBoneWeights);
-        // check for errors
-        if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
+        const aiScene* scene = importer.ReadFile(
+            path,
+            aiProcess_Triangulate |
+            aiProcess_GenSmoothNormals |
+            aiProcess_CalcTangentSpace |
+            aiProcess_LimitBoneWeights
+        );
+
+        if (!scene || !scene->mRootNode)
         {
-            cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+            cerr << "ASSIMP ERROR: " << importer.GetErrorString() << endl;
             return;
         }
-        // retrieve the directory path of the filepath
-        // 支持 Windows 路径分隔符
-        size_t pos = path.find_last_of("/\\");
-        if (pos != string::npos)
-            directory = path.substr(0, pos);
-        else
-            directory = "";
 
-        // process ASSIMP's root node recursively
+        size_t pos = path.find_last_of("/\\");
+        directory = (pos == string::npos) ? "" : path.substr(0, pos);
+
         processNode(scene->mRootNode, scene);
     }
 
-    // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-    void processNode(aiNode *node, const aiScene *scene)
+    void processNode(aiNode* node, const aiScene* scene)
     {
-        // process each mesh located at the current node
-        for(unsigned int i = 0; i < node->mNumMeshes; i++)
+        for (unsigned int i = 0; i < node->mNumMeshes; ++i)
         {
-            // the node object only contains indices to index the actual objects in the scene. 
-            // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             meshes.push_back(processMesh(mesh, scene));
         }
-        // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-        for(unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            processNode(node->mChildren[i], scene);
-        }
 
+        for (unsigned int i = 0; i < node->mNumChildren; ++i)
+            processNode(node->mChildren[i], scene);
     }
 
-	void SetVertexBoneDataToDefault(Vertex& vertex)
-	{
-		for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
-		{
-			vertex.m_BoneIDs[i] = -1;
-			vertex.m_Weights[i] = 0.0f;
-		}
-	}
+    // ---------------- Mesh processing ----------------
 
+    Mesh processMesh(aiMesh* mesh, const aiScene* scene)
+    {
+        vector<Vertex> vertices;
+        vector<unsigned int> indices;
+        vector<Texture> textures;
 
-	Mesh processMesh(aiMesh* mesh, const aiScene* scene)
-	{
-		vector<Vertex> vertices;
-		vector<unsigned int> indices;
-		vector<Texture> textures;
+        vertices.reserve(mesh->mNumVertices);
 
-		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
-		{
-			Vertex vertex;
-			// 初始化骨骼数据，防止垃圾值导致 Shader 崩溃
-			for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
-				vertex.m_BoneIDs[j] = -1;    // 默认无效索引
-				vertex.m_Weights[j] = 0.0f;  // 默认权重为 0
-			}
-			SetVertexBoneDataToDefault(vertex);
-			vertex.Position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
-			vertex.Normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals ? mesh->mNormals[i] : aiVector3D(0,0,0));
-			
-			if (mesh->mTextureCoords[0] && mesh->mTangents)
-			{
-				vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-				vertex.Tangent.x = mesh->mTangents[i].x;
-				glm::vec2 vec;
-				vec.x = mesh->mTextureCoords[0][i].x;
-				vec.y = mesh->mTextureCoords[0][i].y;
-				vertex.TexCoords = vec;
-			}
-			else
-				vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+        for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+        {
+            Vertex vertex{};                     // ⭐ 关键：全量零初始化
+            SetVertexBoneDataToDefault(vertex);  // bone = {-1,0}
 
-			vertices.push_back(vertex);
-		}
-		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
-		{
-			aiFace face = mesh->mFaces[i];
-			for (unsigned int j = 0; j < face.mNumIndices; j++)
-				indices.push_back(face.mIndices[j]);
-		}
-		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+            // position
+            vertex.Position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
 
-		vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
-		// 【新增修复】如果 Diffuse 为空，尝试加载 GLTF/GLB 的 PBR Base Color 纹理
-		if (diffuseMaps.empty())
-		{
-			// 注意：需确保 Assimp 版本较新 (5.0+)，支持 aiTextureType_BASE_COLOR
-			diffuseMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_diffuse", scene);
-		}
-		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-		vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
-		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-		std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
-		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-		std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
-		textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+            // normal
+            if (mesh->HasNormals())
+                vertex.Normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
 
-		ExtractBoneWeightForVertices(vertices,mesh,scene);
+            // texcoords
+            if (mesh->HasTextureCoords(0))
+            {
+                vertex.TexCoords = {
+                    mesh->mTextureCoords[0][i].x,
+                    mesh->mTextureCoords[0][i].y
+                };
+            }
 
-		return Mesh(vertices, indices, textures);
-	}
+            // tangent / bitangent（⚠️ 必须完整赋值）
+            if (mesh->HasTangentsAndBitangents())
+            {
+                vertex.Tangent = AssimpGLMHelpers::GetGLMVec(mesh->mTangents[i]);
+                vertex.Bitangent = AssimpGLMHelpers::GetGLMVec(mesh->mBitangents[i]);
+            }
+            else
+            {
+                vertex.Tangent = glm::vec3(0.0f);
+                vertex.Bitangent = glm::vec3(0.0f);
+            }
 
-	void SetVertexBoneData(Vertex& vertex, int boneID, float weight)
-	{
-		for (int i = 0; i < MAX_BONE_INFLUENCE; ++i)
-		{
-			if (vertex.m_BoneIDs[i] < 0)
-			{
-				vertex.m_Weights[i] = weight;
-				vertex.m_BoneIDs[i] = boneID;
-				break;
-			}
-		}
-	}
+            vertices.push_back(vertex);
+        }
 
+        // indices
+        for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+        {
+            const aiFace& face = mesh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; ++j)
+                indices.push_back(face.mIndices[j]);
+        }
 
-	void ExtractBoneWeightForVertices(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene)
-	{
-		auto& boneInfoMap = m_BoneInfoMap;
-		int& boneCount = m_BoneCounter;
+        // materials
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-		for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
-		{
-			int boneID = -1;
-			std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
-			if (boneInfoMap.find(boneName) == boneInfoMap.end())
-			{
-				BoneInfo newBoneInfo;
-				newBoneInfo.id = boneCount;
-				newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
-				boneInfoMap[boneName] = newBoneInfo;
-				boneID = boneCount;
-				boneCount++;
-			}
-			else
-			{
-				boneID = boneInfoMap[boneName].id;
-			}
-			assert(boneID != -1);
-			auto weights = mesh->mBones[boneIndex]->mWeights;
-			int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+        auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
+        if (diffuseMaps.empty())
+            diffuseMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_diffuse", scene);
 
-			for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
-			{
-				int vertexId = weights[weightIndex].mVertexId;
-				float weight = weights[weightIndex].mWeight;
-				// 防护：确保 vertexId 在 vertices 范围内，避免 vector 下标越界引发断言
-				if (vertexId < 0 || vertexId >= static_cast<int>(vertices.size())) {
-					std::cerr << "Warning: bone weight refers invalid vertexId=" << vertexId
-							  << " mesh->mNumVertices=" << mesh->mNumVertices
-							  << " vertices.size()=" << vertices.size() << std::endl;
-					continue;
-				}
-				SetVertexBoneData(vertices[vertexId], boneID, weight);
-			}
-		}
-	}
+        auto specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
+        auto normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
+        auto heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
 
+        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-	// 优化：支持 Assimp 嵌入纹理与外部文件两种情况
-	unsigned int TextureFromFile(const char* path, const string& directory, const aiScene* scene = nullptr, bool gamma = false)
-	{
-		string filename = string(path);
-		// 如果是外部文件并且传入了目录，构建完整路径；若是嵌入纹理名（"*0"）则保持原样交给 GetEmbeddedTexture
-		if (!directory.empty() && filename.size() > 0 && filename[0] != '*')
-			filename = directory + '/' + filename;
+        ExtractBoneWeightForVertices(vertices, mesh);
 
-		unsigned int textureID;
-		glGenTextures(1, &textureID);
+        return Mesh(vertices, indices, textures);
+    }
 
-		int width = 0, height = 0, nrComponents = 0;
-		unsigned char* data = nullptr;
-		bool needFree = false;
+    // ---------------- Bone handling ----------------
 
-		// 尝试从 scene 中获取嵌入纹理（当 path 为 "*N" 时会命中）
-		if (scene)
-		{
-			const aiTexture* aiTex = scene->GetEmbeddedTexture(path);
-			if (aiTex)
-			{
-				// 压缩格式（PNG/JPG）: mHeight == 0, mWidth 存储字节数
-				if (aiTex->mHeight == 0)
-				{
-					data = stbi_load_from_memory(
-						reinterpret_cast<const unsigned char*>(aiTex->pcData),
-						static_cast<int>(aiTex->mWidth),
-						&width, &height, &nrComponents, 0
-					);
-					needFree = true;
-				}
-				else
-				{
-					// 非压缩原始像素数据，Assimp 提供宽高与像素(ARGB8888)；这里假设为 RGBA
-					data = reinterpret_cast<unsigned char*>(aiTex->pcData);
-					width = aiTex->mWidth;
-					height = aiTex->mHeight;
-					nrComponents = 4;
-					needFree = false; // 不应调用 stbi_image_free
-				}
-			}
-		}
+    void SetVertexBoneDataToDefault(Vertex& vertex)
+    {
+        for (int i = 0; i < MAX_BONE_INFLUENCE; ++i)
+        {
+            vertex.m_BoneIDs[i] = -1;
+            vertex.m_Weights[i] = 0.0f;
+        }
+    }
 
-		// 如果没有嵌入纹理或解析失败，回退到磁盘路径加载
-		if (!data)
-		{
-			data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-			needFree = true;
-		}
+    void SetVertexBoneData(Vertex& vertex, int boneID, float weight)
+    {
+        for (int i = 0; i < MAX_BONE_INFLUENCE; ++i)
+        {
+            if (vertex.m_BoneIDs[i] < 0)
+            {
+                vertex.m_BoneIDs[i] = boneID;
+                vertex.m_Weights[i] = weight;
+                return;
+            }
+        }
+    }
 
-		if (data)
-		{
-			GLenum format;
-			if (nrComponents == 1)
-				format = GL_RED;
-			else if (nrComponents == 3)
-				format = GL_RGB;
-			else if (nrComponents == 4)
-				format = GL_RGBA;
-			else
-				format = GL_RGB; // fallback
+    void ExtractBoneWeightForVertices(vector<Vertex>& vertices, aiMesh* mesh)
+    {
+        for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+        {
+            string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+            int boneID = -1;
 
-			glBindTexture(GL_TEXTURE_2D, textureID);
-			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
+            if (m_BoneInfoMap.count(boneName) == 0)
+            {
+                BoneInfo info;
+                info.id = m_BoneCounter;
+                info.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(
+                    mesh->mBones[boneIndex]->mOffsetMatrix
+                );
+                m_BoneInfoMap[boneName] = info;
+                boneID = m_BoneCounter++;
+            }
+            else
+            {
+                boneID = m_BoneInfoMap[boneName].id;
+            }
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            const aiBone* bone = mesh->mBones[boneIndex];
+            for (unsigned int w = 0; w < bone->mNumWeights; ++w)
+            {
+                int v = bone->mWeights[w].mVertexId;
+                float weight = bone->mWeights[w].mWeight;
 
-			if (needFree) stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Texture failed to load at path: " << path << std::endl;
-			if (needFree && data) stbi_image_free(data);
-		}
+                if (v >= 0 && v < (int)vertices.size())
+                    SetVertexBoneData(vertices[v], boneID, weight);
+            }
+        }
+    }
 
-		return textureID;
-	}
-    
-    // checks all material textures of a given type and loads the textures if they're not loaded yet.
-    // the required info is returned as a Texture struct.
-    vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName, const aiScene* scene)
+    // ---------------- Texture loading ----------------
+
+    unsigned int TextureFromFile(const char* path, const string& directory, const aiScene* scene)
+    {
+        string filename = path;
+        if (!directory.empty() && filename[0] != '*')
+            filename = directory + '/' + filename;
+
+        unsigned int textureID;
+        glGenTextures(1, &textureID);
+
+        int w, h, comp;
+        unsigned char* data = nullptr;
+        bool freeData = false;
+
+        if (scene)
+        {
+            if (const aiTexture* tex = scene->GetEmbeddedTexture(path))
+            {
+                if (tex->mHeight == 0)
+                {
+                    data = stbi_load_from_memory(
+                        (unsigned char*)tex->pcData,
+                        tex->mWidth,
+                        &w, &h, &comp, 0
+                    );
+                    freeData = true;
+                }
+                else
+                {
+                    data = (unsigned char*)tex->pcData;
+                    w = tex->mWidth;
+                    h = tex->mHeight;
+                    comp = 4;
+                }
+            }
+        }
+
+        if (!data)
+        {
+            data = stbi_load(filename.c_str(), &w, &h, &comp, 0);
+            freeData = true;
+        }
+
+        if (data)
+        {
+            GLenum format = (comp == 4) ? GL_RGBA : (comp == 3) ? GL_RGB : GL_RED;
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            if (freeData) stbi_image_free(data);
+        }
+
+        return textureID;
+    }
+
+    vector<Texture> loadMaterialTextures(
+        aiMaterial* mat,
+        aiTextureType type,
+        string typeName,
+        const aiScene* scene)
     {
         vector<Texture> textures;
-        for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+
+        for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i)
         {
             aiString str;
             mat->GetTexture(type, i, &str);
-            // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
+
             bool skip = false;
-            for(unsigned int j = 0; j < textures_loaded.size(); j++)
+            for (auto& t : textures_loaded)
             {
-                if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+                if (t.path == str.C_Str())
                 {
-                    textures.push_back(textures_loaded[j]);
-                    skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+                    textures.push_back(t);
+                    skip = true;
                     break;
                 }
             }
-            if(!skip)
-            {   // if texture hasn't been loaded already, load it
-                Texture texture;
-                texture.id = TextureFromFile(str.C_Str(), this->directory, scene);
-                texture.type = typeName;
-                texture.path = str.C_Str();
-                textures.push_back(texture);
-                textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
+
+            if (!skip)
+            {
+                Texture tex;
+                tex.id = TextureFromFile(str.C_Str(), directory, scene);
+                tex.type = typeName;
+                tex.path = str.C_Str();
+
+                textures.push_back(tex);
+                textures_loaded.push_back(tex);
             }
         }
+
         return textures;
     }
 };
-
-
 
 #endif

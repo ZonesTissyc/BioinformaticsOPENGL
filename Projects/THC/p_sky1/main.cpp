@@ -135,10 +135,11 @@ int main() {
     std::string glb4 = "export_solder2.glb";
     std::string glb5 = "fbx_toglb.glb";
     std::string glb6 = "fbx_toglb3.glb";
+    std::string glb7 = "gltf_to_glb1.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
-    std::string glbPath = glb6;
+    std::string glbPath = glb1;
     Model model(glbPath);
-    Animation animation(glbPath, &model, 3);
+    Animation animation(glbPath, &model, 0);
     Animator animator(&animation);
     ModelTrans transmat;
     transmat.scale(glm::vec3(4.0f, 4.0f, 4.0f));
