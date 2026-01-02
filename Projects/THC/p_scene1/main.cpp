@@ -78,10 +78,10 @@ int main() {
     std::string glb4 = "minecraft_steave.glb";
     std::string glb5 = "mambo.glb";
     // stbi_set_flip_vertically_on_load(true);
-    Model model_1(glb3.c_str());
+    Model model_1(glb1.c_str());
 
     ModelTrans modelTrans;
-    modelTrans.translate(glm::vec3(0.0f,1.0f, -1.0f)); // 稍微调整位置
+    modelTrans.translate(glm::vec3(0.0f,4.0f, -1.0f)); // 稍微调整位置
     modelTrans.scale(glm::vec3(1.0f) * 1.0f);           // 调整缩放
     // modelTrans.rotate(90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
 
