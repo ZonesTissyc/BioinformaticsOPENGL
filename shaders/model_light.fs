@@ -16,40 +16,40 @@ uniform vec3 viewPos;
 uniform vec3 emissiveColor;
 uniform bool hasEmissiveMap;
 uniform sampler2D texture_emissive1;
-// 可调节强度，便于不爆白
-uniform float emissiveStrength; // 在 CPU 默认为 1.0
 
 void main()
-{
-    // base color
-    vec4 baseColor = hasTexture ? texture(texture_diffuse1, TexCoords) * materialColor : materialColor;
+{    
+    // --- 1. 获取基础颜色 (Base Color) ---
+    vec4 baseColor;
+    if(hasTexture) {
+        baseColor = texture(texture_diffuse1, TexCoords) * materialColor;
+    } else {
+        baseColor = materialColor;
+    }
 
-    if (baseColor.a < 0.01)
+    if(baseColor.a < 0.1)
         discard;
 
-    // simple lighting (ambient + diffuse)
+    // --- 2. 光照计算 (Ambient + Diffuse) ---
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);
+
     float ambientStrength = 0.5;
     vec3 ambient = ambientStrength * vec3(1.0);
 
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * vec3(1.0);
 
-    vec3 lighting = ambient + diffuse;
+    vec3 lighting = (ambient + diffuse) * baseColor.rgb;
 
-    // emission
-    vec3 emissiveTex = hasEmissiveMap ? texture(texture_emissive1, TexCoords).rgb : vec3(1.0);
-    vec3 emissive = emissiveColor * emissiveTex * emissiveStrength;
+    // --- 3. Emission ---
+    vec3 emission = emissiveColor;
+    if(hasEmissiveMap)
+    {
+        emission = texture(texture_emissive1, TexCoords).rgb;
+    }
 
-    // 合并
-    vec3 linearColor = lighting * baseColor.rgb + emissive;
+    vec3 finalColor = lighting + emission;
 
-    // 简单 tonemap（可防止亮度爆表）
-    linearColor = linearColor / (linearColor + vec3(1.0));
-
-    // gamma 校正（如果你想）
-    // linearColor = pow(linearColor, vec3(1.0/2.2));
-
-    FragColor = vec4(linearColor, baseColor.a);
+    FragColor = vec4(finalColor, baseColor.a);
 }
