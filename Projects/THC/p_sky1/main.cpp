@@ -136,13 +136,15 @@ int main() {
     std::string glb5 = "fbx_toglb.glb";
     std::string glb6 = "fbx_toglb3.glb";
     std::string glb7 = "gltf_to_glb1.glb";
+    std::string glb8 = "swimming_pool_3d_scene.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
     std::string glbPath = glb1;
     Model model(glbPath);
     Animation animation(glbPath, &model, 0);
     Animator animator(&animation);
     ModelTrans transmat;
-    transmat.scale(glm::vec3(4.0f, 4.0f, 4.0f));
+    transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f));
+    // transmat.rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
     // 着色器预设（投影可在窗口大小变化时更新）
     shader1.use();
     shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
