@@ -119,7 +119,7 @@ int main() {
     glEnableVertexAttribArray(0);
 
     // 光源位置
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+    glm::vec3 lightPos(44.2f, 1.0f, 2.0f);
 
 
     std::string rootURL = R"(../../../)";
