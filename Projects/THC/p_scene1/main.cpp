@@ -78,7 +78,7 @@ int main() {
     std::string glb4 = "minecraft_steave.glb";
     std::string glb5 = "mambo.glb";
     // stbi_set_flip_vertically_on_load(true);
-    Model model_1(glb1.c_str());
+    Model model_1(glb2.c_str());
 
     ModelTrans modelTrans;
     modelTrans.translate(glm::vec3(0.0f,4.0f, -1.0f)); // 稍微调整位置
