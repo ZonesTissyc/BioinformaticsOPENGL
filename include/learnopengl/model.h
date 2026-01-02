@@ -214,6 +214,14 @@ private:
 
             auto heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
             textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+
+            auto emissiveMaps = loadMaterialTextures(
+                material,
+                aiTextureType_EMISSIVE,
+                "texture_emissive",
+                scene
+            );
+            textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
         }
         else
         {
@@ -240,7 +248,18 @@ private:
             << ", color rgba(" << meshColor.r << "," << meshColor.g << "," << meshColor.b << "," << meshColor.a << ")\n";
 
         // Mesh 构造函数是 Mesh(vertices, indices, textures, color)
-        return Mesh(vertices, indices, textures, meshColor);
+
+        glm::vec3 emissiveColor(0.0f);
+        if (material)
+        {
+            aiColor3D e(0.0f, 0.0f, 0.0f);
+            if (AI_SUCCESS == material->Get(AI_MATKEY_COLOR_EMISSIVE, e))
+            {
+                emissiveColor = glm::vec3(e.r, e.g, e.b);
+            }
+        }
+
+        return Mesh(vertices, indices, textures, meshColor, emissiveColor);
     }
 
     vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName, const aiScene* scene)
