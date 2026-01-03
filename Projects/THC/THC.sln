@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p_scene1", "p_scene1\p_scen
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p_PBR", "p_PBR\p_PBR.vcxproj", "{66CCBD96-6843-4837-9B97-0E677AF8929F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p_imgui", "p_imgui\p_imgui.vcxproj", "{19457075-45E9-4A7B-A617-94E6D956BC3F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -111,6 +113,14 @@ Global
 		{66CCBD96-6843-4837-9B97-0E677AF8929F}.Release|x64.Build.0 = Release|x64
 		{66CCBD96-6843-4837-9B97-0E677AF8929F}.Release|x86.ActiveCfg = Release|Win32
 		{66CCBD96-6843-4837-9B97-0E677AF8929F}.Release|x86.Build.0 = Release|Win32
+		{19457075-45E9-4A7B-A617-94E6D956BC3F}.Debug|x64.ActiveCfg = Debug|x64
+		{19457075-45E9-4A7B-A617-94E6D956BC3F}.Debug|x64.Build.0 = Debug|x64
+		{19457075-45E9-4A7B-A617-94E6D956BC3F}.Debug|x86.ActiveCfg = Debug|Win32
+		{19457075-45E9-4A7B-A617-94E6D956BC3F}.Debug|x86.Build.0 = Debug|Win32
+		{19457075-45E9-4A7B-A617-94E6D956BC3F}.Release|x64.ActiveCfg = Release|x64
+		{19457075-45E9-4A7B-A617-94E6D956BC3F}.Release|x64.Build.0 = Release|x64
+		{19457075-45E9-4A7B-A617-94E6D956BC3F}.Release|x86.ActiveCfg = Release|Win32
+		{19457075-45E9-4A7B-A617-94E6D956BC3F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,27 @@
+﻿<Project>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+		  $(SolutionDir)..\..\include;
+		  $(SolutionDir)..\..\thirdLibrary\assimp-5.4.3\include;
+		  $(SolutionDir)..\..\include\imgui;
+		  $(SolutionDir)..\..\include\imgui\backends;
+		  %(AdditionalIncludeDirectories)
+	  </AdditionalIncludeDirectories>
+    </ClCompile>
+
+    <Link>
+      <AdditionalLibraryDirectories>
+        $(SolutionDir)..\..\thirdLibrary\glfw-3.4\libs;
+        $(SolutionDir)..\..\thirdLibrary\assimp-5.4.3\libs;
+        %(AdditionalLibraryDirectories)
+      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+        glfw3.lib;
+        opengl32.lib;
+        assimp-vc143-mtd.lib;
+        %(AdditionalDependencies)
+      </AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

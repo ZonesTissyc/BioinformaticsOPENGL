@@ -71,3 +71,7 @@ htmlcov/
 .env.*
 
 .idea/
+
+# ==== 仓库 ====
+.git/
+.git
