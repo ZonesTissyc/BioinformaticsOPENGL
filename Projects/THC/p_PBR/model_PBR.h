@@ -7,8 +7,10 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <assimp/pbrmaterial.h> // 加载PBR
 
-#include <learnopengl/mesh.h>
+// #include <learnopengl/mesh.h>
+#include "mesh_PBR.h"
 #include <learnopengl/shader.h>
 #include <stb/stb_image.h>
 
@@ -265,6 +267,14 @@ private:
                 scene
             );
             textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
+
+            // 新增：metallic-roughness (glTF 通常把它作为 single texture; Assimp maps this to aiTextureType_UNKNOWN)
+            auto mrMaps = loadMaterialTextures(material, aiTextureType_UNKNOWN, "texture_metallicroughness", scene);
+            textures.insert(textures.end(), mrMaps.begin(), mrMaps.end());
+
+            // 新增：AO (ambient occlusion)
+            auto aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
+            textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
         }
         else
         {
@@ -302,7 +312,28 @@ private:
             }
         }
 
-        return Mesh(vertices, indices, textures, meshColor, emissiveColor);
+        // 在 processMesh 中，读取默认 factor
+        float metallicFactor = 0.0f;
+        float roughnessFactor = 1.0f;
+        aiColor4D baseColorFactor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        if (material) {
+            // 这些宏由 assimp/pbrmaterial.h 定义
+            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallicFactor);
+            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughnessFactor);
+            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColorFactor);
+        }
+
+        return Mesh(
+            vertices,
+            indices,
+            textures,
+            meshColor,                                // glm::vec4 color
+            emissiveColor,                            // glm::vec3 emissive
+            glm::vec3(baseColorFactor.r, baseColorFactor.g, baseColorFactor.b), // baseColor
+            metallicFactor,
+            roughnessFactor
+        );
     }
 
     vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName, const aiScene* scene)
