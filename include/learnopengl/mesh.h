@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm> // 这里必须包含
 using namespace std;
 
 #define MAX_BONE_INFLUENCE 4
@@ -125,6 +126,31 @@ public:
 
         // 重置 active 到 0
         glActiveTexture(GL_TEXTURE0);
+    }
+
+    bool isTransparent() const
+    {
+        // 1) 明确的 alpha
+        if (Color.a < 0.999f) return true;
+
+        // 2) 如果有 diffuse 纹理，检查文件名是否很可能带 alpha（png/tga/webp/tiff），或文件名包含 alpha/opacity 等关键字
+        for (auto& tex : textures)
+        {
+            if (tex.type != "texture_diffuse") continue;
+            string p = tex.path;
+            // tolower
+            std::transform(p.begin(), p.end(), p.begin(), [](unsigned char c) { return std::tolower(c); });
+
+            if (p.find(".png") != string::npos ||
+                p.find(".tga") != string::npos ||
+                p.find(".webp") != string::npos ||
+                p.find(".tiff") != string::npos ||
+                p.find("alpha") != string::npos ||
+                p.find("opacity") != string::npos)
+                return true;
+        }
+
+        return false;
     }
 
 

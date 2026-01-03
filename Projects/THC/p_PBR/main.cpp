@@ -15,7 +15,8 @@
 #include <custom/ModelTrans.h> 
 
 #include <learnopengl/shader.h>
-#include <learnopengl/model.h>
+// #include <learnopengl/model.h>
+#include "model_PBR.h"
 
 // 全局计时变量
 float deltaTime = 0.0f;
@@ -69,7 +70,7 @@ int main() {
 
     std::string rootURL = R"(../../../)";
     std::string vsURL = rootURL + "shaders/model_light.vs";
-    std::string fsURL = rootURL + "shaders/model_light.fs";
+    std::string fsURL = rootURL + "shaders/model_PBR.fs";
     Shader shaderModel(vsURL.c_str(), fsURL.c_str());
 
     std::string glb1 = "swimming_pool_3d_scene.glb";
