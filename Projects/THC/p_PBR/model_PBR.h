@@ -18,6 +18,8 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <cstring>
+#include <cstdlib>
 
 using namespace std;
 
@@ -248,33 +250,53 @@ private:
 
         if (material)
         {
-            auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
-            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+            // 加载 PBR 纹理（适用于 GLB/glTF 文件）
+            // 对于 glTF，Assimp 会将纹理映射到特定的 aiTextureType
+            
+            // 1. Base Color (Albedo/Diffuse) - glTF 通常映射到 DIFFUSE
+            // 尝试多种可能的类型
+            auto baseColorMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_basecolor", scene);
+            // 某些 glTF 可能使用 BASE_COLOR（如果 Assimp 版本支持）
+            #ifdef aiTextureType_BASE_COLOR
+            if (baseColorMaps.empty()) {
+                baseColorMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_basecolor", scene);
+            }
+            #endif
+            textures.insert(textures.end(), baseColorMaps.begin(), baseColorMaps.end());
 
+            // 2. Metallic-Roughness - glTF PBR (关键纹理)
+            // glTF 的 Metallic-Roughness 可能映射到 UNKNOWN 或特定的类型
+            auto mrMaps = loadMaterialTextures(material, aiTextureType_UNKNOWN, "texture_metallicroughness", scene);
+            // 某些版本可能使用 METALLIC_ROUGHNESS（如果支持）
+            #ifdef aiTextureType_METALLIC_ROUGHNESS
+            if (mrMaps.empty()) {
+                mrMaps = loadMaterialTextures(material, aiTextureType_METALLIC_ROUGHNESS, "texture_metallicroughness", scene);
+            }
+            #endif
+            textures.insert(textures.end(), mrMaps.begin(), mrMaps.end());
+
+            // 3. Normal Map - 尝试多种类型
+            auto normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal", scene);
+            if (normalMaps.empty()) {
+                // 某些格式用 HEIGHT 表示 normal
+                normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
+            }
+            textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+            // 4. Occlusion (AO) - glTF
+            auto aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
+            textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
+
+            // 5. Emissive - glTF
+            auto emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive", scene);
+            textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
+
+            // 6. 传统纹理类型（兼容性，某些模型可能仍使用这些）
             auto specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
-            auto normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
-            textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-
             auto heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
             textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-
-            auto emissiveMaps = loadMaterialTextures(
-                material,
-                aiTextureType_EMISSIVE,
-                "texture_emissive",
-                scene
-            );
-            textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
-
-            // 新增：metallic-roughness (glTF 通常把它作为 single texture; Assimp maps this to aiTextureType_UNKNOWN)
-            auto mrMaps = loadMaterialTextures(material, aiTextureType_UNKNOWN, "texture_metallicroughness", scene);
-            textures.insert(textures.end(), mrMaps.begin(), mrMaps.end());
-
-            // 新增：AO (ambient occlusion)
-            auto aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
-            textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
         }
         else
         {
@@ -299,6 +321,12 @@ private:
             << ", indices=" << indices.size()
             << ", textures=" << textures.size()
             << ", color rgba(" << meshColor.r << "," << meshColor.g << "," << meshColor.b << "," << meshColor.a << ")\n";
+        
+        // 输出纹理详情
+        for (size_t i = 0; i < textures.size(); i++) {
+            cout << "[Model]   Texture[" << i << "]: type='" << textures[i].type 
+                 << "', path='" << textures[i].path << "', id=" << textures[i].id << "\n";
+        }
 
         // Mesh 构造函数是 Mesh(vertices, indices, textures, color)
 
@@ -322,6 +350,11 @@ private:
             material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallicFactor);
             material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughnessFactor);
             material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColorFactor);
+            
+            cout << "[Model] PBR Material factors: baseColor=(" << baseColorFactor.r << "," << baseColorFactor.g << "," << baseColorFactor.b << "," << baseColorFactor.a 
+                 << "), metallic=" << metallicFactor << ", roughness=" << roughnessFactor << "\n";
+        } else {
+            cout << "[Model] Warning: No material found, using default PBR factors\n";
         }
 
         return Mesh(
@@ -336,6 +369,7 @@ private:
         );
     }
 
+
     vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName, const aiScene* scene)
     {
         vector<Texture> textures;
@@ -347,29 +381,42 @@ private:
         for (unsigned int i = 0; i < count; i++)
         {
             aiString str;
-            mat->GetTexture(type, i, &str);
-
-            // 查重（基于路径字符串）
-            bool skip = false;
-            for (auto& t : textures_loaded)
+            // 使用简化版本的 GetTexture，只获取路径
+            if (mat->GetTexture(type, i, &str) == AI_SUCCESS)
             {
-                if (t.path == str.C_Str())
+                // 查重（基于路径字符串）
+                bool skip = false;
+                for (auto& t : textures_loaded)
                 {
-                    textures.push_back(t);
-                    skip = true;
-                    break;
+                    if (t.path == str.C_Str())
+                    {
+                        textures.push_back(t);
+                        skip = true;
+                        break;
+                    }
                 }
-            }
 
-            if (!skip)
-            {
-                Texture texture;
-                texture.id = TextureFromFile(str.C_Str(), this->directory, scene, gammaCorrection);
-                texture.type = typeName;
-                texture.path = str.C_Str();
-                textures.push_back(texture);
-                textures_loaded.push_back(texture);
-                cout << "[Model] Texture loaded: " << str.C_Str() << " -> id=" << texture.id << endl;
+                if (!skip)
+                {
+                    Texture texture;
+                    cout << "[Model] Loading texture: path='" << str.C_Str() << "', type='" << typeName << "'\n";
+                    texture.id = TextureFromFile(str.C_Str(), this->directory, scene, gammaCorrection);
+                    texture.type = typeName;
+                    texture.path = str.C_Str();
+                    
+                    if (texture.id == 0) {
+                        cout << "[Model] ERROR: Texture loading failed for '" << str.C_Str() << "' (type=" << typeName << "), texture ID is 0\n";
+                    } else {
+                        cout << "[Model] Texture loaded successfully: " << str.C_Str() << " -> id=" << texture.id << " (type=" << typeName << ")\n";
+                    }
+                    
+                    textures.push_back(texture);
+                    textures_loaded.push_back(texture);
+                }
+                else
+                {
+                    cout << "[Model] Texture already loaded (cached): " << str.C_Str() << " (type=" << typeName << ")\n";
+                }
             }
         }
         return textures;
@@ -397,10 +444,41 @@ unsigned int TextureFromFile(const char* path, const string& directory, const ai
     if (scene)
     {
         const aiTexture* aiTex = scene->GetEmbeddedTexture(path);
-        if (!aiTex) {
-            // 有时候 GetEmbeddedTexture 需要 "*N" 这种格式，尝试以 *index 解析失败也没事
+        
+        // 如果直接查找失败，尝试处理 "*N" 格式（N 是索引）
+        if (!aiTex && !filename.empty() && filename[0] == '*')
+        {
+            // 尝试解析 "*N" 格式
+            try {
+                int index = std::stoi(filename.substr(1));
+                if (index >= 0 && index < static_cast<int>(scene->mNumTextures))
+                {
+                    aiTex = scene->mTextures[index];
+                }
+            }
+            catch (...) {
+                // 解析失败，继续尝试其他方式
+            }
         }
-        else {
+        
+        // 如果还是找不到，尝试按名称查找所有嵌入纹理
+        if (!aiTex && scene->mNumTextures > 0)
+        {
+            for (unsigned int i = 0; i < scene->mNumTextures; i++)
+            {
+                if (scene->mTextures[i] && scene->mTextures[i]->mFilename.length > 0)
+                {
+                    if (strcmp(scene->mTextures[i]->mFilename.C_Str(), path) == 0 ||
+                        strcmp(scene->mTextures[i]->mFilename.C_Str(), filename.c_str()) == 0)
+                    {
+                        aiTex = scene->mTextures[i];
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (aiTex) {
             if (aiTex->mHeight == 0)
             {
                 // 压缩的 embedded (jpg/png inside binary)
