@@ -68,8 +68,8 @@ int main() {
 #pragma endregion
 
     std::string rootURL = R"(../../../)";
-    std::string vsURL = rootURL + "shaders/model_light.vs";
-    std::string fsURL = rootURL + "shaders/model_light.fs";
+    std::string vsURL = rootURL + "shaders/model_light.vs"; // 新建一个新的
+    std::string fsURL = rootURL + "shaders/model_light.fs"; // 新建一个新的
     Shader shaderModel(vsURL.c_str(), fsURL.c_str());
 
     std::string resourcesURL = rootURL + "resources/model/";
