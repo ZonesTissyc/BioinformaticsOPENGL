@@ -138,9 +138,9 @@ int main() {
     std::string glb7 = "gltf_to_glb1.glb";
     std::string glb8 = "swimming_pool_3d_scene.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
-    std::string glbPath = glb1;
+    std::string glbPath = glb3;
     Model model(glbPath);
-    Animation animation(glbPath, &model, 0);
+    Animation animation(glbPath, &model, 10);
     Animator animator(&animation);
     ModelTrans transmat;
     transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f));
