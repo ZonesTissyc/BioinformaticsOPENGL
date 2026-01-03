@@ -1,0 +1,13 @@
+{
+    "version" : "1.0",
+    "description" : "游泳池靶场",
+    "files" : [
+        {
+            "typename" : "glb",
+            "filename" : "swimming_pool_3d_scene.glb",
+            "url" : "https://alist.ztcdream.com/d/local/opengl/model/swimming_pool_3d_scene.glb?sign=V9fkybJcKg7SN0SDF0m9uppiC7RCGUknJE3Kny7IGh4=:0",
+            "unzip" : false,
+            "from" : "https://sketchfab.com/3d-models/swimming-pool-3d-scene-f45154da5a524dff9a2e94faa97a205e"
+        }
+    ]
+}
