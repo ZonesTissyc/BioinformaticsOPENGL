@@ -321,6 +321,12 @@ private:
             << ", indices=" << indices.size()
             << ", textures=" << textures.size()
             << ", color rgba(" << meshColor.r << "," << meshColor.g << "," << meshColor.b << "," << meshColor.a << ")\n";
+        
+        // 输出纹理详情
+        for (size_t i = 0; i < textures.size(); i++) {
+            cout << "[Model]   Texture[" << i << "]: type='" << textures[i].type 
+                 << "', path='" << textures[i].path << "', id=" << textures[i].id << "\n";
+        }
 
         // Mesh 构造函数是 Mesh(vertices, indices, textures, color)
 
@@ -344,6 +350,11 @@ private:
             material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallicFactor);
             material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughnessFactor);
             material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColorFactor);
+            
+            cout << "[Model] PBR Material factors: baseColor=(" << baseColorFactor.r << "," << baseColorFactor.g << "," << baseColorFactor.b << "," << baseColorFactor.a 
+                 << "), metallic=" << metallicFactor << ", roughness=" << roughnessFactor << "\n";
+        } else {
+            cout << "[Model] Warning: No material found, using default PBR factors\n";
         }
 
         return Mesh(
@@ -388,12 +399,23 @@ private:
                 if (!skip)
                 {
                     Texture texture;
+                    cout << "[Model] Loading texture: path='" << str.C_Str() << "', type='" << typeName << "'\n";
                     texture.id = TextureFromFile(str.C_Str(), this->directory, scene, gammaCorrection);
                     texture.type = typeName;
                     texture.path = str.C_Str();
+                    
+                    if (texture.id == 0) {
+                        cout << "[Model] ERROR: Texture loading failed for '" << str.C_Str() << "' (type=" << typeName << "), texture ID is 0\n";
+                    } else {
+                        cout << "[Model] Texture loaded successfully: " << str.C_Str() << " -> id=" << texture.id << " (type=" << typeName << ")\n";
+                    }
+                    
                     textures.push_back(texture);
                     textures_loaded.push_back(texture);
-                    cout << "[Model] Texture loaded: " << str.C_Str() << " -> id=" << texture.id << " (type=" << typeName << ")\n";
+                }
+                else
+                {
+                    cout << "[Model] Texture already loaded (cached): " << str.C_Str() << " (type=" << typeName << ")\n";
                 }
             }
         }
