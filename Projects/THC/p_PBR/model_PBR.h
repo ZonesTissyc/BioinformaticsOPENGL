@@ -250,47 +250,45 @@ private:
 
         if (material)
         {
-            // 优先使用 glTF PBR 纹理加载方式（适用于 GLB 文件）
-            // 如果 glTF 方式找不到纹理，再回退到传统方式
+            // 加载 PBR 纹理（适用于 GLB/glTF 文件）
+            // 对于 glTF，Assimp 会将纹理映射到特定的 aiTextureType
             
-            // 1. Base Color (Albedo/Diffuse) - glTF PBR
-            auto baseColorMaps = loadGLTFTexture(material, "texture_basecolor", scene, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE);
+            // 1. Base Color (Albedo/Diffuse) - glTF 通常映射到 DIFFUSE
+            // 尝试多种可能的类型
+            auto baseColorMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_basecolor", scene);
+            // 某些 glTF 可能使用 BASE_COLOR（如果 Assimp 版本支持）
+            #ifdef aiTextureType_BASE_COLOR
             if (baseColorMaps.empty()) {
-                // 回退到传统 DIFFUSE
-                baseColorMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_basecolor", scene);
+                baseColorMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_basecolor", scene);
             }
+            #endif
             textures.insert(textures.end(), baseColorMaps.begin(), baseColorMaps.end());
 
             // 2. Metallic-Roughness - glTF PBR (关键纹理)
-            auto mrMaps = loadGLTFTexture(material, "texture_metallicroughness", scene, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE);
+            // glTF 的 Metallic-Roughness 可能映射到 UNKNOWN 或特定的类型
+            auto mrMaps = loadMaterialTextures(material, aiTextureType_UNKNOWN, "texture_metallicroughness", scene);
+            // 某些版本可能使用 METALLIC_ROUGHNESS（如果支持）
+            #ifdef aiTextureType_METALLIC_ROUGHNESS
+            if (mrMaps.empty()) {
+                mrMaps = loadMaterialTextures(material, aiTextureType_METALLIC_ROUGHNESS, "texture_metallicroughness", scene);
+            }
+            #endif
             textures.insert(textures.end(), mrMaps.begin(), mrMaps.end());
 
-            // 3. Normal Map - glTF
-            auto normalMaps = loadGLTFTexture(material, "texture_normal", scene, AI_MATKEY_GLTF_NORMAL_TEXTURE);
+            // 3. Normal Map - 尝试多种类型
+            auto normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal", scene);
             if (normalMaps.empty()) {
-                // 回退到传统 HEIGHT (某些格式用 HEIGHT 表示 normal)
+                // 某些格式用 HEIGHT 表示 normal
                 normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
-            }
-            if (normalMaps.empty()) {
-                // 再尝试 NORMALS 类型
-                normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal", scene);
             }
             textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
             // 4. Occlusion (AO) - glTF
-            auto aoMaps = loadGLTFTexture(material, "texture_ao", scene, AI_MATKEY_GLTF_OCCLUSION_TEXTURE);
-            if (aoMaps.empty()) {
-                // 回退到传统 AMBIENT_OCCLUSION
-                aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
-            }
+            auto aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
             textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
 
             // 5. Emissive - glTF
-            auto emissiveMaps = loadGLTFTexture(material, "texture_emissive", scene, AI_MATKEY_GLTF_EMISSIVE_TEXTURE);
-            if (emissiveMaps.empty()) {
-                // 回退到传统 EMISSIVE
-                emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive", scene);
-            }
+            auto emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive", scene);
             textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
 
             // 6. 传统纹理类型（兼容性，某些模型可能仍使用这些）
@@ -360,59 +358,6 @@ private:
         );
     }
 
-    // 专门用于加载 glTF PBR 纹理的函数
-    // 使用 AI_MATKEY_GLTF_* 宏，这些宏展开为 (key, type, index) 三元组
-    template<typename... Args>
-    vector<Texture> loadGLTFTexture(aiMaterial* mat, string typeName, const aiScene* scene, Args... args)
-    {
-        vector<Texture> textures;
-        if (!mat) return textures;
-
-        aiString str;
-        aiTextureMapping mapping = aiTextureMapping_UV;
-        unsigned int uvIndex = 0;
-        float blend = 1.0f;
-        aiTextureOp op = aiTextureOp_Multiply;
-        aiTextureMapMode mapMode[3] = { aiTextureMapMode_Wrap, aiTextureMapMode_Wrap, aiTextureMapMode_Wrap };
-
-        // 使用 AI_MATKEY_GLTF_* 宏展开的参数
-        aiReturn result = mat->GetTexture(args..., &str, &mapping, &uvIndex, &blend, &op, mapMode);
-        
-        if (result == AI_SUCCESS && str.length > 0)
-        {
-            cout << "[Model] loadGLTFTexture: found " << typeName << " texture: " << str.C_Str() << endl;
-            
-            // 查重（基于路径字符串）
-            bool skip = false;
-            for (auto& t : textures_loaded)
-            {
-                if (t.path == str.C_Str())
-                {
-                    textures.push_back(t);
-                    skip = true;
-                    cout << "[Model] loadGLTFTexture: reusing existing texture: " << str.C_Str() << endl;
-                    break;
-                }
-            }
-
-            if (!skip)
-            {
-                Texture texture;
-                texture.id = TextureFromFile(str.C_Str(), this->directory, scene, gammaCorrection);
-                texture.type = typeName;
-                texture.path = str.C_Str();
-                textures.push_back(texture);
-                textures_loaded.push_back(texture);
-                cout << "[Model] loadGLTFTexture: loaded " << typeName << " texture: " << str.C_Str() << " -> id=" << texture.id << endl;
-            }
-        }
-        else
-        {
-            cout << "[Model] loadGLTFTexture: no " << typeName << " texture found\n";
-        }
-        
-        return textures;
-    }
 
     vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName, const aiScene* scene)
     {
@@ -425,29 +370,31 @@ private:
         for (unsigned int i = 0; i < count; i++)
         {
             aiString str;
-            mat->GetTexture(type, i, &str);
-
-            // 查重（基于路径字符串）
-            bool skip = false;
-            for (auto& t : textures_loaded)
+            // 使用简化版本的 GetTexture，只获取路径
+            if (mat->GetTexture(type, i, &str) == AI_SUCCESS)
             {
-                if (t.path == str.C_Str())
+                // 查重（基于路径字符串）
+                bool skip = false;
+                for (auto& t : textures_loaded)
                 {
-                    textures.push_back(t);
-                    skip = true;
-                    break;
+                    if (t.path == str.C_Str())
+                    {
+                        textures.push_back(t);
+                        skip = true;
+                        break;
+                    }
                 }
-            }
 
-            if (!skip)
-            {
-                Texture texture;
-                texture.id = TextureFromFile(str.C_Str(), this->directory, scene, gammaCorrection);
-                texture.type = typeName;
-                texture.path = str.C_Str();
-                textures.push_back(texture);
-                textures_loaded.push_back(texture);
-                cout << "[Model] Texture loaded: " << str.C_Str() << " -> id=" << texture.id << endl;
+                if (!skip)
+                {
+                    Texture texture;
+                    texture.id = TextureFromFile(str.C_Str(), this->directory, scene, gammaCorrection);
+                    texture.type = typeName;
+                    texture.path = str.C_Str();
+                    textures.push_back(texture);
+                    textures_loaded.push_back(texture);
+                    cout << "[Model] Texture loaded: " << str.C_Str() << " -> id=" << texture.id << " (type=" << typeName << ")\n";
+                }
             }
         }
         return textures;
