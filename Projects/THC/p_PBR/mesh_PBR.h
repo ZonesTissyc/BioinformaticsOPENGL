@@ -1,4 +1,4 @@
-﻿#ifndef MESH_H
+#ifndef MESH_H
 #define MESH_H
 
 #include <glad/glad.h> 
@@ -44,20 +44,27 @@ public:
     glm::vec4 Color;
     glm::vec3 EmissiveColor;
 
-    // PBR members
-    glm::vec3 baseColorFactor = glm::vec3(1.0f);
+    // PBR members (glTF metallic-roughness)
+    glm::vec4 baseColorFactor = glm::vec4(1.0f);
     float metallicFactor = 0.0f;
     float roughnessFactor = 1.0f;
+
+    enum class AlphaMode { Opaque, Mask, Blend };
+    AlphaMode alphaMode = AlphaMode::Opaque;
+    float alphaCutoff = 0.5f;
 
     bool hasBaseColorMap = false;
     bool hasNormalMap = false;
     bool hasMetallicRoughnessMap = false;
+    bool hasMetallicMap = false;
+    bool hasRoughnessMap = false;
     bool hasAOMap = false;
     bool hasEmissiveMap = false;
 
     // 构造函数：新增 pbr 参数（可向后兼容）
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures,
-        glm::vec4 color, glm::vec3 emissive, glm::vec3 baseColor, float metallic, float roughness)
+        glm::vec4 color, glm::vec3 emissive, glm::vec4 baseColor, float metallic, float roughness,
+        AlphaMode alphaMode = AlphaMode::Opaque, float alphaCutoff = 0.5f)
     {
         this->vertices = std::move(vertices);
         this->indices = std::move(indices);
@@ -68,19 +75,25 @@ public:
         this->baseColorFactor = baseColor;
         this->metallicFactor = metallic;
         this->roughnessFactor = roughness;
+        this->alphaMode = alphaMode;
+        this->alphaCutoff = alphaCutoff;
 
         hasBaseColorMap = false;
         hasNormalMap = false;
         hasMetallicRoughnessMap = false;
+        hasMetallicMap = false;
+        hasRoughnessMap = false;
         hasAOMap = false;
         hasEmissiveMap = false;
 
         for (const auto& t : textures) {
             string p = t.type;
             std::transform(p.begin(), p.end(), p.begin(), ::tolower);
-            if (p.find("base") != string::npos || p.find("diffuse") != string::npos) hasBaseColorMap = true;
+            if (p.find("basecolor") != string::npos || p.find("base_color") != string::npos || p.find("base") != string::npos || p.find("diffuse") != string::npos) hasBaseColorMap = true;
             else if (p.find("normal") != string::npos) hasNormalMap = true;
-            else if (p.find("metallicroughness") != string::npos || p.find("metallic") != string::npos) hasMetallicRoughnessMap = true;
+            else if (p.find("metallicroughness") != string::npos) hasMetallicRoughnessMap = true;
+            else if (p.find("metallic") != string::npos) hasMetallicMap = true;
+            else if (p.find("roughness") != string::npos) hasRoughnessMap = true;
             else if (p.find("ao") != string::npos || p.find("ambient") != string::npos) hasAOMap = true;
             else if (p.find("emissive") != string::npos) hasEmissiveMap = true;
         }
@@ -113,22 +126,29 @@ public:
         // 只有在确实存在对应纹理 id 时才绑定
         if (hasBaseColorMap) bindIfPresent("baseColorMap", "base", "diffuse");
         if (hasNormalMap) bindIfPresent("normalMap", "normal");
-        if (hasMetallicRoughnessMap) bindIfPresent("metallicRoughnessMap", "metallicroughness", "metallic");
+        if (hasMetallicRoughnessMap) bindIfPresent("metallicRoughnessMap", "metallicroughness");
+        if (!hasMetallicRoughnessMap && hasMetallicMap) bindIfPresent("metallicMap", "metallic");
+        if (!hasMetallicRoughnessMap && hasRoughnessMap) bindIfPresent("roughnessMap", "roughness");
         if (hasAOMap) bindIfPresent("aoMap", "ao", "ambient");
         if (hasEmissiveMap) bindIfPresent("emissiveMap", "emissive");
 
         // 常量 uniforms
-        shader.setVec3("baseColorFactor", baseColorFactor);
+        shader.setVec4("baseColorFactor", baseColorFactor);
         shader.setFloat("metallicFactor", metallicFactor);
         shader.setFloat("roughnessFactor", roughnessFactor);
         shader.setVec3("emissiveFactor", EmissiveColor);
+        shader.setFloat("alphaCutoff", alphaCutoff);
 
         // 标志 uniforms
         shader.setBool("hasBaseColorMap", hasBaseColorMap && findTextureIdByType("base", "diffuse") != 0);
         shader.setBool("hasNormalMap", hasNormalMap && findTextureIdByType("normal") != 0);
-        shader.setBool("hasMetallicRoughnessMap", hasMetallicRoughnessMap && findTextureIdByType("metallicroughness", "metallic") != 0);
+        shader.setBool("hasMetallicRoughnessMap", hasMetallicRoughnessMap && findTextureIdByType("metallicroughness") != 0);
+        shader.setBool("hasMetallicMap", (!hasMetallicRoughnessMap) && hasMetallicMap && findTextureIdByType("metallic") != 0);
+        shader.setBool("hasRoughnessMap", (!hasMetallicRoughnessMap) && hasRoughnessMap && findTextureIdByType("roughness") != 0);
         shader.setBool("hasAOMap", hasAOMap && findTextureIdByType("ao", "ambient") != 0);
         shader.setBool("hasEmissiveMap", hasEmissiveMap && findTextureIdByType("emissive") != 0);
+        shader.setBool("alphaModeBlend", alphaMode == AlphaMode::Blend);
+        shader.setBool("alphaModeMask", alphaMode == AlphaMode::Mask);
 
         // draw safety checks
         if (VAO == 0) {
@@ -163,6 +183,7 @@ public:
 
     // isTransparent 保持或改进（略）
     bool isTransparent() const {
+        if (alphaMode == AlphaMode::Blend) return true;
         if (Color.a < 0.999f) return true;
         for (auto& tex : textures) {
             string p = tex.path;

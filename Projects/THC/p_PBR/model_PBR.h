@@ -1,4 +1,4 @@
-﻿#ifndef MODEL_H
+#ifndef MODEL_H
 #define MODEL_H
 
 #include <glad/glad.h>
@@ -87,6 +87,30 @@ public:
 
 
 private:
+    static Mesh::AlphaMode parseAlphaMode(const aiMaterial* material, float& outCutoff)
+    {
+        outCutoff = 0.5f;
+        if (!material) return Mesh::AlphaMode::Opaque;
+
+        // glTF alphaCutoff (only used when alphaMode == MASK)
+#ifdef AI_MATKEY_GLTF_ALPHACUTOFF
+        material->Get(AI_MATKEY_GLTF_ALPHACUTOFF, outCutoff);
+#endif
+
+#ifdef AI_MATKEY_GLTF_ALPHAMODE
+        aiString mode;
+        if (material->Get(AI_MATKEY_GLTF_ALPHAMODE, mode) == AI_SUCCESS)
+        {
+            std::string m = mode.C_Str();
+            std::transform(m.begin(), m.end(), m.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (m == "blend") return Mesh::AlphaMode::Blend;
+            if (m == "mask") return Mesh::AlphaMode::Mask;
+            return Mesh::AlphaMode::Opaque;
+        }
+#endif
+        return Mesh::AlphaMode::Opaque;
+    }
+
     void loadModel(const string& path)
     {
         Assimp::Importer importer;
@@ -248,48 +272,74 @@ private:
 
         if (material)
         {
-            auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
-            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+            // glTF2 PBR: prefer dedicated types, keep legacy fallbacks
+            // BaseColor
+            {
+                auto baseColorMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_basecolor", scene);
+                textures.insert(textures.end(), baseColorMaps.begin(), baseColorMaps.end());
+                auto diffuseFallback = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_basecolor", scene);
+                textures.insert(textures.end(), diffuseFallback.begin(), diffuseFallback.end());
+            }
 
-            auto specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
-            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+            // Normal
+            {
+                auto normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal", scene);
+                textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+                auto normalFallback = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
+                textures.insert(textures.end(), normalFallback.begin(), normalFallback.end());
+            }
 
-            auto normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
-            textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+            // Metallic / Roughness
+            {
+                // Some assimp versions expose combined map as UNKNOWN; also support separated metalness/roughness.
+                auto mrCombined = loadMaterialTextures(material, aiTextureType_UNKNOWN, "texture_metallicroughness", scene);
+                textures.insert(textures.end(), mrCombined.begin(), mrCombined.end());
 
-            auto heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
-            textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+                auto metallicMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "texture_metallic", scene);
+                textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
 
-            auto emissiveMaps = loadMaterialTextures(
-                material,
-                aiTextureType_EMISSIVE,
-                "texture_emissive",
-                scene
-            );
-            textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
+                auto roughnessMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness", scene);
+                textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
+            }
 
-            // 新增：metallic-roughness (glTF 通常把它作为 single texture; Assimp maps this to aiTextureType_UNKNOWN)
-            auto mrMaps = loadMaterialTextures(material, aiTextureType_UNKNOWN, "texture_metallicroughness", scene);
-            textures.insert(textures.end(), mrMaps.begin(), mrMaps.end());
+            // AO
+            {
+                auto aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
+                textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
+                auto aoFallback = loadMaterialTextures(material, aiTextureType_LIGHTMAP, "texture_ao", scene);
+                textures.insert(textures.end(), aoFallback.begin(), aoFallback.end());
+            }
 
-            // 新增：AO (ambient occlusion)
-            auto aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
-            textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
+            // Emissive
+            {
+                auto emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive", scene);
+                textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
+            }
         }
         else
         {
             cout << "[Model] Warning: mesh.materialIndex invalid or material == nullptr\n";
         }
 
-        // 4) 读取材质颜色（可选）
-        glm::vec4 meshColor(1.0f);
-        if (material)
+        // 4) 读取 glTF PBR factor（优先）与透明模式
+        float metallicFactor = 0.0f;
+        float roughnessFactor = 1.0f;
+        aiColor4D baseColorFactor(1.0f, 1.0f, 1.0f, 1.0f);
+        if (material) {
+            // 这些宏由 assimp/pbrmaterial.h 定义
+            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallicFactor);
+            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughnessFactor);
+            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColorFactor);
+        }
+
+        glm::vec4 meshColor(baseColorFactor.r, baseColorFactor.g, baseColorFactor.b, baseColorFactor.a);
+
+        // legacy fallback if baseColorFactor not set (rare)
+        if (material && meshColor == glm::vec4(1.0f))
         {
             aiColor4D diffuse(1.0f, 1.0f, 1.0f, 1.0f);
             if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
-            {
                 meshColor = glm::vec4(diffuse.r, diffuse.g, diffuse.b, diffuse.a);
-            }
             float opacity = 1.0f;
             if (AI_SUCCESS == aiGetMaterialFloat(material, AI_MATKEY_OPACITY, &opacity))
                 meshColor.a = opacity;
@@ -312,17 +362,8 @@ private:
             }
         }
 
-        // 在 processMesh 中，读取默认 factor
-        float metallicFactor = 0.0f;
-        float roughnessFactor = 1.0f;
-        aiColor4D baseColorFactor(1.0f, 1.0f, 1.0f, 1.0f);
-
-        if (material) {
-            // 这些宏由 assimp/pbrmaterial.h 定义
-            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallicFactor);
-            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughnessFactor);
-            material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColorFactor);
-        }
+        float alphaCutoff = 0.5f;
+        Mesh::AlphaMode alphaMode = parseAlphaMode(material, alphaCutoff);
 
         return Mesh(
             vertices,
@@ -330,9 +371,11 @@ private:
             textures,
             meshColor,                                // glm::vec4 color
             emissiveColor,                            // glm::vec3 emissive
-            glm::vec3(baseColorFactor.r, baseColorFactor.g, baseColorFactor.b), // baseColor
+            glm::vec4(baseColorFactor.r, baseColorFactor.g, baseColorFactor.b, baseColorFactor.a), // baseColorFactor
             metallicFactor,
-            roughnessFactor
+            roughnessFactor,
+            alphaMode,
+            alphaCutoff
         );
     }
 
