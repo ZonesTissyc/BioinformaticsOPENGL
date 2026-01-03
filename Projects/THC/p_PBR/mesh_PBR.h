@@ -75,14 +75,34 @@ public:
         hasAOMap = false;
         hasEmissiveMap = false;
 
+        // 只有在纹理 ID 有效时才设置标志位
         for (const auto& t : textures) {
+            if (t.id == 0) {
+                cout << "[Mesh::Constructor] Warning: texture with type '" << t.type << "' has invalid ID (0), skipping\n";
+                continue; // 跳过无效纹理
+            }
             string p = t.type;
             std::transform(p.begin(), p.end(), p.begin(), ::tolower);
-            if (p.find("base") != string::npos || p.find("diffuse") != string::npos) hasBaseColorMap = true;
-            else if (p.find("normal") != string::npos) hasNormalMap = true;
-            else if (p.find("metallicroughness") != string::npos || p.find("metallic") != string::npos) hasMetallicRoughnessMap = true;
-            else if (p.find("ao") != string::npos || p.find("ambient") != string::npos) hasAOMap = true;
-            else if (p.find("emissive") != string::npos) hasEmissiveMap = true;
+            if (p.find("base") != string::npos || p.find("diffuse") != string::npos) {
+                hasBaseColorMap = true;
+                cout << "[Mesh::Constructor] Found baseColorMap texture: type='" << t.type << "', id=" << t.id << "\n";
+            }
+            else if (p.find("normal") != string::npos) {
+                hasNormalMap = true;
+                cout << "[Mesh::Constructor] Found normalMap texture: type='" << t.type << "', id=" << t.id << "\n";
+            }
+            else if (p.find("metallicroughness") != string::npos || p.find("metallic") != string::npos) {
+                hasMetallicRoughnessMap = true;
+                cout << "[Mesh::Constructor] Found metallicRoughnessMap texture: type='" << t.type << "', id=" << t.id << "\n";
+            }
+            else if (p.find("ao") != string::npos || p.find("ambient") != string::npos) {
+                hasAOMap = true;
+                cout << "[Mesh::Constructor] Found aoMap texture: type='" << t.type << "', id=" << t.id << "\n";
+            }
+            else if (p.find("emissive") != string::npos) {
+                hasEmissiveMap = true;
+                cout << "[Mesh::Constructor] Found emissiveMap texture: type='" << t.type << "', id=" << t.id << "\n";
+            }
         }
 
         setupMesh();
@@ -92,6 +112,16 @@ public:
     // render the mesh — 绑定 PBR 纹理 & uniforms
     void Draw(Shader& shader)
     {
+        cout << "[Mesh::Draw] Starting draw. textures count=" << textures.size() 
+             << ", hasBaseColorMap=" << hasBaseColorMap 
+             << ", baseColorFactor=(" << baseColorFactor.r << "," << baseColorFactor.g << "," << baseColorFactor.b << ")\n";
+        
+        // 输出所有纹理信息
+        for (size_t i = 0; i < textures.size(); i++) {
+            cout << "[Mesh::Draw]   Texture[" << i << "]: type='" << textures[i].type 
+                 << "', path='" << textures[i].path << "', id=" << textures[i].id << "\n";
+        }
+        
         shader.use();
 
         // 查询 GPU 可以使用的最大 texture units（防止越界）
@@ -99,23 +129,40 @@ public:
         glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxUnits);
 
         int unit = 0;
-        auto bindIfPresent = [&](const char* uniformName, const string& findKey1, const string& findKey2 = "") {
-            if (unit >= maxUnits) return; // no more units
+        bool baseColorBound = false;
+        bool normalBound = false;
+        bool metallicRoughnessBound = false;
+        bool aoBound = false;
+        bool emissiveBound = false;
+
+        auto bindIfPresent = [&](const char* uniformName, const string& findKey1, const string& findKey2 = "", bool* boundFlag = nullptr) {
+            if (unit >= maxUnits) {
+                cout << "[Mesh::Draw] Warning: texture unit limit reached (" << maxUnits << "), skipping " << uniformName << "\n";
+                return false;
+            }
             unsigned int tid = findTextureIdByType(findKey1, findKey2);
             if (tid != 0) {
                 shader.setInt(uniformName, unit);
                 glActiveTexture(GL_TEXTURE0 + unit);
                 glBindTexture(GL_TEXTURE_2D, tid);
+                cout << "[Mesh::Draw] Bound texture " << uniformName << " to unit " << unit << " (id=" << tid << ")\n";
                 ++unit;
+                if (boundFlag) *boundFlag = true;
+                return true;
             }
-            };
+            else {
+                cout << "[Mesh::Draw] Warning: texture " << uniformName << " not found or invalid (id=0)\n";
+                return false;
+            }
+        };
 
-        // 只有在确实存在对应纹理 id 时才绑定
-        if (hasBaseColorMap) bindIfPresent("baseColorMap", "base", "diffuse");
-        if (hasNormalMap) bindIfPresent("normalMap", "normal");
-        if (hasMetallicRoughnessMap) bindIfPresent("metallicRoughnessMap", "metallicroughness", "metallic");
-        if (hasAOMap) bindIfPresent("aoMap", "ao", "ambient");
-        if (hasEmissiveMap) bindIfPresent("emissiveMap", "emissive");
+        // 无论标志位如何，都尝试查找和绑定纹理（因为标志位可能没有正确设置）
+        // 只有在纹理 ID 有效时才会实际绑定
+        baseColorBound = bindIfPresent("baseColorMap", "base", "diffuse", &baseColorBound);
+        normalBound = bindIfPresent("normalMap", "normal", "", &normalBound);
+        metallicRoughnessBound = bindIfPresent("metallicRoughnessMap", "metallicroughness", "metallic", &metallicRoughnessBound);
+        aoBound = bindIfPresent("aoMap", "ao", "ambient", &aoBound);
+        emissiveBound = bindIfPresent("emissiveMap", "emissive", "", &emissiveBound);
 
         // 常量 uniforms
         shader.setVec3("baseColorFactor", baseColorFactor);
@@ -123,12 +170,12 @@ public:
         shader.setFloat("roughnessFactor", roughnessFactor);
         shader.setVec3("emissiveFactor", EmissiveColor);
 
-        // 标志 uniforms
-        shader.setBool("hasBaseColorMap", hasBaseColorMap && findTextureIdByType("base", "diffuse") != 0);
-        shader.setBool("hasNormalMap", hasNormalMap && findTextureIdByType("normal") != 0);
-        shader.setBool("hasMetallicRoughnessMap", hasMetallicRoughnessMap && findTextureIdByType("metallicroughness", "metallic") != 0);
-        shader.setBool("hasAOMap", hasAOMap && findTextureIdByType("ao", "ambient") != 0);
-        shader.setBool("hasEmissiveMap", hasEmissiveMap && findTextureIdByType("emissive") != 0);
+        // 标志 uniforms - 只有在纹理实际绑定成功时才设置为 true
+        shader.setBool("hasBaseColorMap", baseColorBound);
+        shader.setBool("hasNormalMap", normalBound);
+        shader.setBool("hasMetallicRoughnessMap", metallicRoughnessBound);
+        shader.setBool("hasAOMap", aoBound);
+        shader.setBool("hasEmissiveMap", emissiveBound);
 
         // draw safety checks
         if (VAO == 0) {
@@ -152,12 +199,21 @@ public:
 
     // 简单工具：按 type 关键字找 texture.id（优先第一个匹配）
     unsigned int findTextureIdByType(const string& key1, const string& key2 = "") const {
+        cout << "[Mesh::findTextureIdByType] Searching for key1='" << key1 << "', key2='" << key2 << "'\n";
         for (auto& t : textures) {
             string p = t.type;
             std::transform(p.begin(), p.end(), p.begin(), [](unsigned char c) { return std::tolower(c); });
-            if (!key1.empty() && p.find(key1) != string::npos) return t.id;
-            if (!key2.empty() && p.find(key2) != string::npos) return t.id;
+            cout << "[Mesh::findTextureIdByType]   Checking texture: type='" << t.type << "' (lowercase='" << p << "'), id=" << t.id << "\n";
+            if (!key1.empty() && p.find(key1) != string::npos) {
+                cout << "[Mesh::findTextureIdByType]   Match found with key1! Returning id=" << t.id << "\n";
+                return t.id;
+            }
+            if (!key2.empty() && p.find(key2) != string::npos) {
+                cout << "[Mesh::findTextureIdByType]   Match found with key2! Returning id=" << t.id << "\n";
+                return t.id;
+            }
         }
+        cout << "[Mesh::findTextureIdByType]   No match found, returning 0\n";
         return 0;
     }
 
