@@ -16,24 +16,16 @@
 
 #include <learnopengl/shader.h>
 #include <learnopengl/model.h>
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+//#include "imgui.h"
+//#include "imgui_impl_glfw.h"
+//#include "imgui_impl_opengl3.h"
+#include "iui.h"
 
 // 全局计时变量
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-void initImGui(GLFWwindow* window) {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-    ImGui::StyleColorsDark();
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330 core"); // GLSL版本
-}
 
 int main() {
 
@@ -42,8 +34,8 @@ int main() {
     Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
     InputController controller(camera, 2.5f, 0.1f);
     Projection projection(45.0f, 0.1f, 100.0f, 1280.0f, 720.0f);
+    Iui iui(window.get());
 
-    initImGui(window.get());
     std::string shaderDir = "../../../shaders/";
     Shader colorShader((shaderDir + "1.colors/1.colors.vs").c_str(), (shaderDir + "1.colors/1.colors.fs").c_str());
     Shader lightShader((shaderDir + "1.colors/1.light_cube.vs").c_str(), (shaderDir + "1.colors/1.light_cube.fs").c_str());
@@ -164,28 +156,11 @@ int main() {
         model_1.Draw(shaderModel, camera.getPos());
 
         // imgui开始
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        // HUD 窗口
-        ImGui::SetNextWindowPos(ImVec2(10, 10));
-        ImGui::Begin("HUD",
-            nullptr,
-            ImGuiWindowFlags_NoTitleBar |
-            ImGuiWindowFlags_AlwaysAutoResize |
-            ImGuiWindowFlags_NoResize |
-            ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_NoBackground);
-
-        // FPS
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-
-        ImGui::End();
-
-        // 渲染 ImGui
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        iui.beginFrame();
+        iui.drawCrosshair();
+        iui.showFPS();
+        iui.showPos(camera.getPos());
+        iui.endFrame();
 
         window.swapBuffers();
     }
