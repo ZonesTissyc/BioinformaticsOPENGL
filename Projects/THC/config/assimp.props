@@ -3,7 +3,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>
         $(SolutionDir)..\..\include;
-        $(SolutionDir)..\..\thirdLibrary\assimp-6.0.2\include;
+        $(SolutionDir)..\..\thirdLibrary\assimp-5.4.3\include;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
     </ClCompile>
@@ -11,7 +11,7 @@
     <Link>
       <AdditionalLibraryDirectories>
         $(SolutionDir)..\..\thirdLibrary\glfw-3.4\libs;
-        $(SolutionDir)..\..\thirdLibrary\assimp-6.0.2\libs;
+        $(SolutionDir)..\..\thirdLibrary\assimp-5.4.3\libs;
         %(AdditionalLibraryDirectories)
       </AdditionalLibraryDirectories>
       <AdditionalDependencies>
