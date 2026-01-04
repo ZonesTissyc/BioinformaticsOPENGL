@@ -39,7 +39,7 @@ int main() {
 		shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
 		shader1.setMat4("model", matrotate.getModelMatrix());
 
-		model.Draw(shader1);
+		model.Draw(shader1, camera.getPos());
 
 		window.swapBuffers();
 		
