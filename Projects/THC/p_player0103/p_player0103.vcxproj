@@ -127,7 +127,41 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\custom\Camera.cpp" />
+    <ClCompile Include="..\..\..\src\custom\InputController.cpp" />
+    <ClCompile Include="..\..\..\src\custom\ModelTrans.cpp" />
+    <ClCompile Include="..\..\..\src\custom\Projection.cpp" />
+    <ClCompile Include="..\..\..\src\glad.c" />
+    <ClCompile Include="..\..\..\src\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\..\..\src\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\custom\animation.h" />
+    <ClInclude Include="..\..\..\include\custom\animator.h" />
+    <ClInclude Include="..\..\..\include\custom\animdata.h" />
+    <ClInclude Include="..\..\..\include\custom\assimp_glm_helpers.h" />
+    <ClInclude Include="..\..\..\include\custom\bone.h" />
+    <ClInclude Include="..\..\..\include\custom\Camera.h" />
+    <ClInclude Include="..\..\..\include\custom\InputController.h" />
+    <ClInclude Include="..\..\..\include\custom\mesh.h" />
+    <ClInclude Include="..\..\..\include\custom\ModelTrans.h" />
+    <ClInclude Include="..\..\..\include\custom\model_anim.h" />
+    <ClInclude Include="..\..\..\include\custom\model_static.h" />
+    <ClInclude Include="..\..\..\include\custom\Projection.h" />
+    <ClInclude Include="..\..\..\include\custom\shader.h" />
+    <ClInclude Include="..\..\..\include\custom\shader_m.h" />
+    <ClInclude Include="..\..\..\include\custom\shader_s.h" />
+    <ClInclude Include="..\..\..\include\custom\timer.h" />
+    <ClInclude Include="..\..\..\include\custom\window.h" />
+    <ClInclude Include="..\..\..\include\games\charactor.h" />
+    <ClInclude Include="..\..\..\include\games\model.h" />
+    <ClInclude Include="..\..\..\include\games\object.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
