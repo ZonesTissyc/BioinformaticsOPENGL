@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="头文件\imgui">
+      <UniqueIdentifier>{37e69ebc-92ed-4361-8e6d-8a347621df98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\custom">
+      <UniqueIdentifier>{c4e5c5a0-7664-4f54-b332-e97cf6f303af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\games">
+      <UniqueIdentifier>{242cd7a4-853c-4fa3-91fb-ed7e7a81def7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\glad.c">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\stb_image.cpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\imgui\imgui.cpp">
+      <Filter>头文件\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\imgui\imgui_draw.cpp">
+      <Filter>头文件\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\imgui\imgui_impl_glfw.cpp">
+      <Filter>头文件\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\imgui\imgui_impl_opengl3.cpp">
+      <Filter>头文件\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\imgui\imgui_tables.cpp">
+      <Filter>头文件\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\imgui\imgui_widgets.cpp">
+      <Filter>头文件\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\custom\Camera.cpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\custom\InputController.cpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\custom\ModelTrans.cpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\custom\Projection.cpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\custom\animation.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\animator.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\animdata.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\assimp_glm_helpers.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\bone.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\Camera.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\InputController.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\mesh.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\model_anim.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\model_static.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\ModelTrans.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\Projection.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\shader.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\shader_m.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\shader_s.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\timer.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\window.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\charactor.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\object.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\custom\model_base.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_base.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_a.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_s.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_anim_data.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_animated.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\animation.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\animator.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
