@@ -119,10 +119,31 @@
     <ClInclude Include="..\..\..\include\games\charactor.h">
       <Filter>头文件\games</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\games\model.h">
+    <ClInclude Include="..\..\..\include\games\object.h">
       <Filter>头文件\games</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\games\object.h">
+    <ClInclude Include="..\..\..\include\custom\model_base.h">
+      <Filter>头文件\custom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_base.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_a.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_s.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_anim_data.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\model_animated.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\animation.h">
+      <Filter>头文件\games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\games\animator.h">
       <Filter>头文件\games</Filter>
     </ClInclude>
   </ItemGroup>

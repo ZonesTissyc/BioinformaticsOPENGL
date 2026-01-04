@@ -86,7 +86,7 @@ int main() {
     std::string glb5 = "mambo.glb";
     std::string glb6 = "4CFE-ribbon-rainbow-vis_NIH3D.glb";
     // stbi_set_flip_vertically_on_load(true);
-    Model model_1(glb1.c_str());
+    Model_static model_1(glb1.c_str());
 
     ModelTrans modelTrans;
     modelTrans.translate(glm::vec3(0.0f, 4.0f, -1.0f)); // 稍微调整位置

@@ -1,8 +1,8 @@
 ﻿#pragma once
+
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include <stb_image.h>
 
@@ -13,45 +13,48 @@
 #include <custom/mesh.h>
 #include <custom/shader.h>
 #include <custom/assimp_glm_helpers.h>
-#include <custom/animdata.h>
+#include <custom/animdata.h> // BoneInfo definition
 
 #include <string>
 #include <iostream>
 #include <map>
 #include <vector>
 
-using namespace std;
-
-class Model_anim
+class ModelAnimData
 {
 public:
-    vector<Texture> textures_loaded;
-    vector<Mesh> meshes;
-    string directory;
-    bool gammaCorrection;
-
-    Model_anim(string const& path, bool gamma = false)
+    ModelAnimData(const std::string& path, bool gamma = false)
         : gammaCorrection(gamma)
     {
         loadModel(path);
     }
 
-    void Draw(Shader& shader)
+    // 资源级绘制（不上传骨骼矩阵，实例类负责上传）
+    void DrawMeshes(Shader& shader)
     {
         for (auto& mesh : meshes)
             mesh.Draw(shader);
     }
 
-    auto& GetBoneInfoMap() { return m_BoneInfoMap; }
+    // 供 Animation 使用 / 查询
+    std::map<std::string, BoneInfo>& GetBoneInfoMap() { return m_BoneInfoMap; }
     int& GetBoneCount() { return m_BoneCounter; }
 
+    const std::string& GetDirectory() const { return directory; }
+    const std::vector<Mesh>& GetMeshes() const { return meshes; }
+
 private:
-    map<string, BoneInfo> m_BoneInfoMap;
+    std::vector<Texture> textures_loaded;
+    std::vector<Mesh> meshes;
+    std::string directory;
+    bool gammaCorrection{ false };
+
+    std::map<std::string, BoneInfo> m_BoneInfoMap;
     int m_BoneCounter = 0;
 
     // ---------------- Model loading ----------------
 
-    void loadModel(string const& path)
+    void loadModel(const std::string& path)
     {
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(
@@ -64,18 +67,20 @@ private:
 
         if (!scene || !scene->mRootNode)
         {
-            cerr << "ASSIMP ERROR: " << importer.GetErrorString() << endl;
+            std::cerr << "ASSIMP ERROR: " << importer.GetErrorString() << std::endl;
             return;
         }
 
         size_t pos = path.find_last_of("/\\");
-        directory = (pos == string::npos) ? "" : path.substr(0, pos);
+        directory = (pos == std::string::npos) ? "" : path.substr(0, pos);
 
         processNode(scene->mRootNode, scene);
     }
 
     void processNode(aiNode* node, const aiScene* scene)
     {
+        if (!node) return;
+
         for (unsigned int i = 0; i < node->mNumMeshes; ++i)
         {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
@@ -90,16 +95,16 @@ private:
 
     Mesh processMesh(aiMesh* mesh, const aiScene* scene)
     {
-        vector<Vertex> vertices;
-        vector<unsigned int> indices;
-        vector<Texture> textures;
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
+        std::vector<Texture> textures;
 
         vertices.reserve(mesh->mNumVertices);
 
         for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
         {
-            Vertex vertex{};                     // ⭐ 关键：全量零初始化
-            SetVertexBoneDataToDefault(vertex);  // bone = {-1,0}
+            Vertex vertex{};                     // 全量零初始化
+            SetVertexBoneDataToDefault(vertex);  // bone defaults
 
             // position
             vertex.Position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
@@ -117,7 +122,7 @@ private:
                 };
             }
 
-            // tangent / bitangent（⚠️ 必须完整赋值）
+            // tangent / bitangent
             if (mesh->HasTangentsAndBitangents())
             {
                 vertex.Tangent = AssimpGLMHelpers::GetGLMVec(mesh->mTangents[i]);
@@ -141,20 +146,25 @@ private:
         }
 
         // materials
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        aiMaterial* material = nullptr;
+        if (scene && mesh->mMaterialIndex < scene->mNumMaterials)
+            material = scene->mMaterials[mesh->mMaterialIndex];
 
-        auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
-        if (diffuseMaps.empty())
-            diffuseMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_diffuse", scene);
+        if (material)
+        {
+            auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
+            if (diffuseMaps.empty())
+                diffuseMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_diffuse", scene);
 
-        auto specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
-        auto normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
-        auto heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
+            auto specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
+            auto normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
+            auto heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
 
-        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+            textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+            textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+        }
 
         ExtractBoneWeightForVertices(vertices, mesh);
 
@@ -185,11 +195,11 @@ private:
         }
     }
 
-    void ExtractBoneWeightForVertices(vector<Vertex>& vertices, aiMesh* mesh)
+    void ExtractBoneWeightForVertices(std::vector<Vertex>& vertices, aiMesh* mesh)
     {
         for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
         {
-            string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+            std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
             int boneID = -1;
 
             if (m_BoneInfoMap.count(boneName) == 0)
@@ -221,9 +231,9 @@ private:
 
     // ---------------- Texture loading ----------------
 
-    unsigned int TextureFromFile(const char* path, const string& directory, const aiScene* scene)
+    unsigned int TextureFromFile(const char* path, const std::string& directory, const aiScene* scene)
     {
-        string filename = path;
+        std::string filename = path;
         if (!directory.empty() && filename[0] != '*')
             filename = directory + '/' + filename;
 
@@ -281,13 +291,15 @@ private:
         return textureID;
     }
 
-    vector<Texture> loadMaterialTextures(
+    std::vector<Texture> loadMaterialTextures(
         aiMaterial* mat,
         aiTextureType type,
-        string typeName,
+        std::string typeName,
         const aiScene* scene)
     {
-        vector<Texture> textures;
+        std::vector<Texture> textures;
+
+        if (!mat) return textures;
 
         for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i)
         {
