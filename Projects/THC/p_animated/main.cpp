@@ -17,8 +17,12 @@
 
 // 引入 LearnOpenGL 的 Shader 类
 #include <custom/shader_m.h>
-#include <custom/animator.h>
-#include <custom/model_anim.h>
+
+#include "games/model_anim_data.h"
+#include "games/animation.h"
+#include "games/animator.h"
+#include "games/model_animated.h"
+
 #include <custom/timer.h>
 // 全局计时变量
 float deltaTime = 0.0f;
@@ -140,9 +144,11 @@ int main() {
     std::string glb8 = "swimming_pool_3d_scene.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
     std::string glbPath = glb3;
-    Model_anim model(glbPath);
-    Animation animation(glbPath, &model, 1);
-    Animator animator(&animation);
+
+    auto modelData = std::make_shared<ModelAnimData>(glbPath);
+    Animation* animation = new Animation(glbPath, modelData.get());
+    auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
+
     ModelTrans transmat;
     transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*6.0F);
     // transmat.rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -208,7 +214,7 @@ int main() {
         
         // 绘制模型
         shader1.use();
-        animator.UpdateAnimation(dt);
+
         // 上传相机矩阵（custom::Camera 提供 getView()）
         shader1.setMat4("view", camera.getView());
         shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
@@ -217,16 +223,11 @@ int main() {
         glm::mat4 modelMat = glm::mat4(1.0f);
         shader1.setMat4("model", transmat.getModelMatrix());
 
-        // 上传骨骼矩阵到 shader（shader 中应声明 e.g. "uniform mat4 finalBonesMatrices[100];"）
-        auto finalMatrices = animator.GetFinalBoneMatrices();
-        for (size_t i = 0; i < finalMatrices.size(); ++i) {
-            std::string name = "finalBonesMatrices[" + std::to_string(i) + "]";
-            shader1.setMat4(name, finalMatrices[i]);
-        }
+        modelAnimated->Update(deltaTime);
 
         // 绘制模型
-        model.Draw(shader1);
-        
+
+        modelAnimated->Draw(shader1, camera.getPos());
         // 绘制后36个顶点 (立方体)
         glDrawArrays(GL_TRIANGLES, 6, 36);
 
