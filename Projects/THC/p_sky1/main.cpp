@@ -16,9 +16,10 @@
 #include <custom/ModelTrans.h> 
 
 // 引入 LearnOpenGL 的 Shader 类
-#include <learnopengl/shader_m.h>
-#include <learnopengl/animator.h>
-#include <learnopengl/model_animation.h>
+#include <custom/shader_m.h>
+#include <custom/animator.h>
+#include <custom/model_anim.h>
+#include <custom/timer.h>
 // 全局计时变量
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -30,9 +31,9 @@ int main() {
 
     // 2. 设置摄像机和输入控制 (利用 custom/Camera.h 和 InputController.h)
     // ------------------------------------------------------------------
-    Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
+    Camera camera(glm::vec3(0.0f, 0.2f, 3.0f));
     // 速度设为 2.5f, 鼠标灵敏度 0.1f
-    InputController controller(camera, 2.5f, 0.1f);
+    InputController controller(camera, 0.5f, 0.1f);
 
     // 3. 设置投影矩阵 (利用 custom/Projection.h)
     // -----------------------------------------
@@ -140,10 +141,10 @@ int main() {
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
     std::string glbPath = glb3;
     Model model(glbPath);
-    Animation animation(glbPath, &model, 10);
+    Animation animation(glbPath, &model, 1);
     Animator animator(&animation);
     ModelTrans transmat;
-    transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f));
+    transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*6.0F);
     // transmat.rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
     // 着色器预设（投影可在窗口大小变化时更新）
     shader1.use();
@@ -151,6 +152,11 @@ int main() {
 
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
+
+    // timer类
+    Timer timer;
+    float dt = 0.0f;
+
     // 6. 渲染循环
     // ------------------------------------------------------------------
     while (window.noClose()) {
@@ -158,9 +164,9 @@ int main() {
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
+        dt = timer.tick();
         // 处理输入
-        controller.processKeyboardInput(window.get(), deltaTime);
+        controller.processKeyboardInput(window.get(), dt);
         controller.processMouseInput(window.get());
 
         // 渲染设置
@@ -202,7 +208,7 @@ int main() {
         
         // 绘制模型
         shader1.use();
-        animator.UpdateAnimation(deltaTime);
+        animator.UpdateAnimation(dt);
         // 上传相机矩阵（custom::Camera 提供 getView()）
         shader1.setMat4("view", camera.getView());
         shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
