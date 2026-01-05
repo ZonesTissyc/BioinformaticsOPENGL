@@ -18,10 +18,10 @@
 // 引入 LearnOpenGL 的 Shader 类
 #include <custom/shader_m.h>
 
-#include "games/model_anim_data.h"
-#include "games/animation.h"
-#include "games/animator.h"
-#include "games/model_animated.h"
+#include "custom/model_anim_data.h"
+#include "custom/animation.h"
+#include "custom/animator.h"
+#include "custom/model_animated.h"
 
 #include <custom/timer.h>
 // 全局计时变量
@@ -143,10 +143,10 @@ int main() {
     std::string glb7 = "gltf_to_glb1.glb";
     std::string glb8 = "swimming_pool_3d_scene.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
-    std::string glbPath = glb1;
+    std::string glbPath = glb2;
 
     auto modelData = std::make_shared<ModelAnimData>(glbPath);
-    Animation* animation = new Animation(glbPath, modelData.get());
+    Animation* animation = new Animation(glbPath, modelData.get(),10);
     auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
 
     ModelTrans transmat;
