@@ -4,10 +4,10 @@
 #include <string>
 #include <glm/glm.hpp>
 
-#include <games/model_base.h>
-#include <games/model_anim_data.h>
-#include <games/animation.h>
-#include <games/animator.h>
+#include <custom/model_base.h>
+#include <custom/model_anim_data.h>
+#include <custom/animation.h>
+#include <custom/animator.h>
 #include <custom/shader.h>
 
 class ModelAnimated : public ModelBase

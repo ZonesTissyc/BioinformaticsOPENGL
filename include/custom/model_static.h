@@ -1,5 +1,7 @@
-﻿#ifndef MODEL_H
-#define MODEL_H
+﻿#pragma once
+
+#include <custom/model_base.h> 
+
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -17,39 +19,50 @@
 #include <iostream>
 #include <algorithm>
 
-using namespace std;
-
-// 声明：默认参数只放在这里
-unsigned int TextureFromFile(const char* path, const string& directory, const aiScene* scene = nullptr, bool gamma = false);
-
-class Model_static
+class ModelStatic : public ModelBase
 {
 public:
-    vector<Texture> textures_loaded;
-    vector<Mesh> meshes;
-    string directory;
-    bool gammaCorrection;
+    std::vector<Texture> textures_loaded;
+    std::vector<Mesh> meshes;
+    std::string directory;
+    bool gammaCorrection = false;
 
-    Model_static(const string& path, bool gamma = false) : gammaCorrection(gamma)
+    ModelStatic(const std::string& path, bool gamma = false)
+        : gammaCorrection(gamma)
     {
         loadModel(path);
     }
 
-    // 修改 Model.h 内的 Draw()：
-    void Draw(Shader& shader, const glm::vec3& camPos)
+
+
+    void Draw(Shader& shader,  const glm::vec3& camPos) 
     {
-        vector<Mesh*> opaqueMeshes;
-        vector<pair<float, Mesh*>> transparentMeshes;
+        DrawInternal(shader, camPos);
+    }
+
+    bool IsAnimated() const override
+    {
+        return false;
+    }
+
+
+
+private:
+    glm::vec3 m_CameraPos{ 0.0f };
+
+    void DrawInternal(Shader& shader, const glm::vec3& camPos)
+    {
+        std::vector<Mesh*> opaqueMeshes;
+        std::vector<std::pair<float, Mesh*>> transparentMeshes;
 
         for (auto& mesh : meshes)
         {
             if (mesh.isTransparent())
             {
-                // 计算 mesh 中心
                 glm::vec3 center(0.0f);
                 for (auto& v : mesh.vertices)
                     center += v.Position;
-                center /= (float)mesh.vertices.size();
+                center /= static_cast<float>(mesh.vertices.size());
 
                 float dist = glm::length(camPos - center);
                 transparentMeshes.push_back({ dist, &mesh });
@@ -60,32 +73,32 @@ public:
             }
         }
 
-        // 1️⃣ 渲染不透明 Mesh
-        for (auto& m : opaqueMeshes)
+        // 1️⃣ 不透明
+        for (auto* m : opaqueMeshes)
             m->Draw(shader);
 
-        // 2️⃣ 渲染透明 Mesh，从远到近
+        // 2️⃣ 透明
         if (!transparentMeshes.empty())
         {
-            std::sort(transparentMeshes.begin(), transparentMeshes.end(),
-                [](const pair<float, Mesh*>& a, const pair<float, Mesh*>& b)
-                { return a.first > b.first; }); // 距离越远越先渲染
+            std::sort(
+                transparentMeshes.begin(),
+                transparentMeshes.end(),
+                [](auto& a, auto& b) { return a.first > b.first; }
+            );
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDepthMask(GL_FALSE); // 禁止写入深度缓存
+            glDepthMask(GL_FALSE);
 
             for (auto& p : transparentMeshes)
                 p.second->Draw(shader);
 
-            glDepthMask(GL_TRUE);  // 恢复深度写入
+            glDepthMask(GL_TRUE);
             glDisable(GL_BLEND);
         }
     }
 
-
-private:
-    void loadModel(const string& path)
+    void loadModel(const std::string& path)
     {
         Assimp::Importer importer;
 
@@ -116,7 +129,6 @@ private:
 
         processNode(scene->mRootNode, scene);
     }
-
     void processNode(aiNode* node, const aiScene* scene)
     {
         if (!node) return;
@@ -144,7 +156,6 @@ private:
         for (unsigned int i = 0; i < node->mNumChildren; i++)
             processNode(node->mChildren[i], scene);
     }
-
     Mesh processMesh(aiMesh* mesh, const aiScene* scene)
     {
         vector<Vertex> vertices;
@@ -305,7 +316,12 @@ private:
         return Mesh(vertices, indices, textures, meshColor, emissiveColor);
     }
 
-    vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName, const aiScene* scene)
+    std::vector<Texture> loadMaterialTextures(
+        aiMaterial* mat,
+        aiTextureType type,
+        std::string typeName,
+        const aiScene* scene
+    )
     {
         vector<Texture> textures;
         if (!mat) return textures;
@@ -343,108 +359,109 @@ private:
         }
         return textures;
     }
+
+    unsigned int TextureFromFile(const char* path, const string& directory, const aiScene* scene, bool gamma)
+    {
+        string filename = string(path);
+        // 某些 path 可能以 "*index" 形式（嵌入）, 对 disk path 做合并
+        string fullpath = filename;
+        if (!filename.empty() && filename[0] != '*') {
+            fullpath = directory + "/" + filename;
+        }
+
+        unsigned int textureID = 0;
+        glGenTextures(1, &textureID);
+
+        int width = 0, height = 0, nrComponents = 0;
+        unsigned char* data = nullptr;
+        bool needFree = false;
+
+        // 处理嵌入纹理（Assimp 的 *index 形式或者名字）
+        if (scene)
+        {
+            const aiTexture* aiTex = scene->GetEmbeddedTexture(path);
+            if (!aiTex) {
+                // 有时候 GetEmbeddedTexture 需要 "*N" 这种格式，尝试以 *index 解析失败也没事
+            }
+            else {
+                if (aiTex->mHeight == 0)
+                {
+                    // 压缩的 embedded (jpg/png inside binary)
+                    int req_comp = 4;
+                    data = stbi_load_from_memory(
+                        reinterpret_cast<const unsigned char*>(aiTex->pcData),
+                        static_cast<int>(aiTex->mWidth),
+                        &width, &height, &nrComponents, req_comp
+                    );
+                    if (data) {
+                        nrComponents = req_comp;
+                        needFree = true;
+                        cout << "[TextureFromFile] loaded compressed embedded texture from memory. bytes=" << aiTex->mWidth
+                            << " decoded: " << width << "x" << height << " comps=" << nrComponents << endl;
+                    }
+                    else {
+                        cout << "[TextureFromFile] stbi_load_from_memory failed for embedded compressed texture\n";
+                    }
+                }
+                else
+                {
+                    // 非压缩（raw RGBA framebuffer-like）
+                    data = reinterpret_cast<unsigned char*>(aiTex->pcData);
+                    width = aiTex->mWidth;
+                    height = aiTex->mHeight;
+                    nrComponents = 4; // Assimp 文档：非压缩通常为 RGBA
+                    needFree = false;
+                    cout << "[TextureFromFile] using raw embedded texture data. size=" << width << "x" << height << " comps=" << nrComponents << endl;
+                }
+            }
+        }
+
+        // 如果不是嵌入或嵌入加载失败，尝试文件系统加载
+        if (!data)
+        {
+            int req_comp = 4;
+            data = stbi_load(fullpath.c_str(), &width, &height, &nrComponents, req_comp);
+            if (data) {
+                nrComponents = req_comp;
+                needFree = true;
+                cout << "[TextureFromFile] loaded texture from disk: " << fullpath << " size=" << width << "x" << height << " comps=" << nrComponents << endl;
+            }
+            else {
+                cout << "[TextureFromFile] failed to load texture from disk: " << fullpath << " stbi reason: " << stbi_failure_reason() << endl;
+            }
+        }
+
+        if (data)
+        {
+            GLenum format = GL_RGBA;
+            if (nrComponents == 4) format = GL_RGBA;
+            else if (nrComponents == 3) format = GL_RGB;
+            else if (nrComponents == 2) format = GL_RG;
+            else if (nrComponents == 1) format = GL_RED;
+
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            // 内存数据现在保证是 req_comp=4（若使用 stbi），或者 Assimp raw（也可能是 4）
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            if (needFree) stbi_image_free(data);
+
+            cout << "[TextureFromFile] texture uploaded to GPU id=" << textureID << " size=(" << width << "x" << height << ") comps=" << nrComponents << endl;
+        }
+        else
+        {
+            cout << "[TextureFromFile] Texture failed to load at path: " << path << endl;
+        }
+
+        return textureID;
+    }
+
+
+
 };
 
-// 纹理加载函数（改进：统一强制到 RGBA，处理嵌入和磁盘图像，带日志）
-unsigned int TextureFromFile(const char* path, const string& directory, const aiScene* scene, bool gamma)
-{
-    string filename = string(path);
-    // 某些 path 可能以 "*index" 形式（嵌入）, 对 disk path 做合并
-    string fullpath = filename;
-    if (!filename.empty() && filename[0] != '*') {
-        fullpath = directory + "/" + filename;
-    }
-
-    unsigned int textureID = 0;
-    glGenTextures(1, &textureID);
-
-    int width = 0, height = 0, nrComponents = 0;
-    unsigned char* data = nullptr;
-    bool needFree = false;
-
-    // 处理嵌入纹理（Assimp 的 *index 形式或者名字）
-    if (scene)
-    {
-        const aiTexture* aiTex = scene->GetEmbeddedTexture(path);
-        if (!aiTex) {
-            // 有时候 GetEmbeddedTexture 需要 "*N" 这种格式，尝试以 *index 解析失败也没事
-        }
-        else {
-            if (aiTex->mHeight == 0)
-            {
-                // 压缩的 embedded (jpg/png inside binary)
-                int req_comp = 4;
-                data = stbi_load_from_memory(
-                    reinterpret_cast<const unsigned char*>(aiTex->pcData),
-                    static_cast<int>(aiTex->mWidth),
-                    &width, &height, &nrComponents, req_comp
-                );
-                if (data) {
-                    nrComponents = req_comp;
-                    needFree = true;
-                    cout << "[TextureFromFile] loaded compressed embedded texture from memory. bytes=" << aiTex->mWidth
-                        << " decoded: " << width << "x" << height << " comps=" << nrComponents << endl;
-                }
-                else {
-                    cout << "[TextureFromFile] stbi_load_from_memory failed for embedded compressed texture\n";
-                }
-            }
-            else
-            {
-                // 非压缩（raw RGBA framebuffer-like）
-                data = reinterpret_cast<unsigned char*>(aiTex->pcData);
-                width = aiTex->mWidth;
-                height = aiTex->mHeight;
-                nrComponents = 4; // Assimp 文档：非压缩通常为 RGBA
-                needFree = false;
-                cout << "[TextureFromFile] using raw embedded texture data. size=" << width << "x" << height << " comps=" << nrComponents << endl;
-            }
-        }
-    }
-
-    // 如果不是嵌入或嵌入加载失败，尝试文件系统加载
-    if (!data)
-    {
-        int req_comp = 4;
-        data = stbi_load(fullpath.c_str(), &width, &height, &nrComponents, req_comp);
-        if (data) {
-            nrComponents = req_comp;
-            needFree = true;
-            cout << "[TextureFromFile] loaded texture from disk: " << fullpath << " size=" << width << "x" << height << " comps=" << nrComponents << endl;
-        }
-        else {
-            cout << "[TextureFromFile] failed to load texture from disk: " << fullpath << " stbi reason: " << stbi_failure_reason() << endl;
-        }
-    }
-
-    if (data)
-    {
-        GLenum format = GL_RGBA;
-        if (nrComponents == 4) format = GL_RGBA;
-        else if (nrComponents == 3) format = GL_RGB;
-        else if (nrComponents == 2) format = GL_RG;
-        else if (nrComponents == 1) format = GL_RED;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        // 内存数据现在保证是 req_comp=4（若使用 stbi），或者 Assimp raw（也可能是 4）
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        if (needFree) stbi_image_free(data);
-
-        cout << "[TextureFromFile] texture uploaded to GPU id=" << textureID << " size=(" << width << "x" << height << ") comps=" << nrComponents << endl;
-    }
-    else
-    {
-        cout << "[TextureFromFile] Texture failed to load at path: " << path << endl;
-    }
-
-    return textureID;
-}
-
-#endif
