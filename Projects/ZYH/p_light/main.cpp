@@ -14,8 +14,9 @@
 #include <custom/Projection.h> 
 #include <custom/ModelTrans.h> 
 
-#include <learnopengl/shader.h>
+#include <custom/shader.h>
 #include <learnopengl/model.h>
+#include <UI/iui.h>
 
 // 全局计时变量
 float deltaTime = 0.0f;
@@ -25,10 +26,10 @@ int main() {
 
 #pragma region 初始化
     Window window(1280, 720, "OpenGL Scene - Sky & Ground Test");
-    Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
-    InputController controller(camera, 2.5f, 0.1f);
+    Camera camera(glm::vec3(-1.0f, 3.65f, -4.0f));
+    InputController controller(camera, 0.5f, 0.1f);
     Projection projection(45.0f, 0.1f, 100.0f, 1280.0f, 720.0f);
-
+    Iui iui(window.get());
     std::string shaderDir = "../../../shaders/";
     Shader colorShader((shaderDir + "1.colors/1.colors.vs").c_str(), (shaderDir + "1.colors/1.colors.fs").c_str());
     Shader lightShader((shaderDir + "1.colors/1.light_cube.vs").c_str(), (shaderDir + "1.colors/1.light_cube.fs").c_str());
@@ -65,14 +66,14 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // 光源位置
-    glm::vec3 lightPos(4.0f, 4.0f, 4.0f); // [修改] 稍微调整光的位置让它离模型近一点，方便观察
+    // 点光源
+    glm::vec3 lightPos(-2.73f, 5.49f, -6.49f); 
 
 #pragma endregion
 
     std::string rootURL = R"(../../../)";
-    std::string vsURL = rootURL + "shaders/model_light.vs"; // 新建一个新的
-    std::string fsURL = rootURL + "shaders/model_light.fs"; // 新建一个新的
+    std::string vsURL = rootURL + "shaders/blinn_light.vs"; 
+    std::string fsURL = rootURL + "shaders/blinn_light.fs"; 
     Shader shaderModel(vsURL.c_str(), fsURL.c_str());
 
     std::string resourcesURL = rootURL + "resources/model/";
@@ -129,7 +130,7 @@ int main() {
         lightShader.setMat4("view", viewMat);
         modelmat1 = glm::mat4(1.0f);
         modelmat1 = glm::translate(modelmat1, lightPos);
-        modelmat1 = glm::scale(modelmat1, glm::vec3(0.2f));
+        modelmat1 = glm::scale(modelmat1, glm::vec3(0.005f)); // 进一步缩小光源立方体
         lightShader.setMat4("model", modelmat1);
 
         // [关键] 绘制光源立方体必须在这里调用，用 lightShader 绘制
@@ -143,10 +144,30 @@ int main() {
         shaderModel.setMat4("model", modelTrans.getModelMatrix());
 
         // [修改] 4. 传递光照所需的 Uniforms (对应新的 fs 代码)
-        shaderModel.setVec3("lightPos", lightPos);
-        shaderModel.setVec3("viewPos", camera.getPos()); // 假设 Camera 类有 Position 成员变量
+        shaderModel.setVec3("uLightPos", lightPos);
+        shaderModel.setVec3("viewPos", camera.getPos());
+        
+        
+        
+        // 设置材质参数
+        shaderModel.setVec3("uKa", 0.2f, 0.2f, 0.2f);    // 环境光反射系数
+        shaderModel.setVec3("uKd", 0.8f, 0.8f, 0.8f);    // 漫反射系数
+        shaderModel.setVec3("uKs", 0.1f, 0.1f, 0.1f);    // 降低镜面反射系数，减少高光
+        shaderModel.setFloat("uShininess", 32.0f);       // 高光指数
+        
+        // 设置光源强度参数
+        shaderModel.setVec3("uIa", 0.5f, 0.5f, 0.5f);    // 光源环境光强度
+        shaderModel.setVec3("uId", 1.0f, 1.0f, 1.0f);    // 光源漫反射强度
+        shaderModel.setVec3("uIs", 1.0f, 1.0f, 1.0f);    // 光源镜面反射强度
 
         model_1.Draw(shaderModel, camera.getPos());
+        
+        // imgui开始
+        iui.beginFrame();
+        iui.showFPS();
+        iui.showPos(camera.getPos());
+        //iui.drawCrosshair();
+        iui.endFrame();
 
         window.swapBuffers();
     }
