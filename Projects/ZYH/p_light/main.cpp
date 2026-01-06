@@ -67,7 +67,7 @@ int main() {
     glEnableVertexAttribArray(0);
 
     // 点光源
-    glm::vec3 lightPos(-2.73f, 5.49f, -6.49f); 
+    glm::vec3 lightPos(-2.73f, 5.49f, -6.50f); 
 
 #pragma endregion
 
@@ -151,14 +151,14 @@ int main() {
         
         // 设置材质参数
         shaderModel.setVec3("uKa", 0.2f, 0.2f, 0.2f);    // 环境光反射系数
-        shaderModel.setVec3("uKd", 0.8f, 0.8f, 0.8f);    // 漫反射系数
-        shaderModel.setVec3("uKs", 0.1f, 0.1f, 0.1f);    // 降低镜面反射系数，减少高光
-        shaderModel.setFloat("uShininess", 32.0f);       // 高光指数
+        shaderModel.setVec3("uKd", 1.0f, 1.0f, 1.0f);    // 漫反射系数
+        shaderModel.setVec3("uKs", 0.5f, 0.5f, 0.5f);    // 降低镜面反射系数，减少高光
+        shaderModel.setFloat("uShininess", 16.0f);       // 降低高光指数，使高光更柔和
         
         // 设置光源强度参数
         shaderModel.setVec3("uIa", 0.5f, 0.5f, 0.5f);    // 光源环境光强度
-        shaderModel.setVec3("uId", 1.0f, 1.0f, 1.0f);    // 光源漫反射强度
-        shaderModel.setVec3("uIs", 1.0f, 1.0f, 1.0f);    // 光源镜面反射强度
+        shaderModel.setVec3("uId", 0.8f, 0.8f, 0.8f);    // 光源漫反射强度
+        shaderModel.setVec3("uIs", 0.2f, 0.2f, 0.2f);    // 进一步降低光源镜面反射强度
 
         model_1.Draw(shaderModel, camera.getPos());
         
