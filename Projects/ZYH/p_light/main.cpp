@@ -28,7 +28,7 @@ int main() {
 #pragma region 
     Window window(1280, 720, "Blinn-phong");
     Camera camera(glm::vec3(-1.0f, 3.65f, -4.0f));
-    InputController controller(camera, 0.5f, 0.1f);
+    InputController controller(camera, 1.5f, 0.1f);
     Projection projection(45.0f, 0.1f, 100.0f, 1280.0f, 720.0f);
     Iui iui(window.get());
     std::string shaderDir = "../../../shaders/";
@@ -68,7 +68,7 @@ int main() {
     glEnableVertexAttribArray(0);
 
     // 点光源
-    glm::vec3 lightPos(-2.73f, 5.49f, -6.49f); 
+    //glm::vec3 lightPos(-2.73f, 5.49f, -6.49f); 
 
 #pragma endregion
 
@@ -95,7 +95,7 @@ int main() {
     // 定义4个点光源的位置（放置在场景的四个角落）
     std::vector<glm::vec3> lightPositions = {
         glm::vec3(-2.73f, 5.49f, -6.49f),  // 左上角
-        glm::vec3(2.73f, 5.49f, -6.49f),   // 右上角
+        glm::vec3(0.0f, 8.94f, -9.40f),   // 右上角
         glm::vec3(-2.73f, 5.49f, 4.51f),   // 左下角
         glm::vec3(2.73f, 5.49f, 4.51f)     // 右下角
     };
@@ -103,7 +103,7 @@ int main() {
     // 定义4个点光源的颜色（不同颜色以区分光源）
     std::vector<glm::vec3> lightColors = {
         glm::vec3(1.0f, 1.0f, 1.0f),  
-        glm::vec3(1.0f, 1.0f, 1.0f),   
+        glm::vec3(0.0f, 1.0f, 0.0f),   
         glm::vec3(1.0f, 1.0f, 1.0f),   
         glm::vec3(1.0f, 1.0f, 1.0f)    
     };
