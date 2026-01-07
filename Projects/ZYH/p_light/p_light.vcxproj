@@ -60,18 +60,22 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\config\assimp.props" />
+    <Import Project="..\..\..\config\imgui.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\config\assimp.props" />
+    <Import Project="..\..\..\config\imgui.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\config\assimp.props" />
+    <Import Project="..\..\..\config\imgui.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\config\assimp.props" />
+    <Import Project="..\..\..\config\imgui.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -132,6 +136,12 @@
     <ClCompile Include="..\..\..\src\custom\ModelTrans.cpp" />
     <ClCompile Include="..\..\..\src\custom\Projection.cpp" />
     <ClCompile Include="..\..\..\src\glad.c" />
+    <ClCompile Include="..\..\..\src\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\..\src\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
