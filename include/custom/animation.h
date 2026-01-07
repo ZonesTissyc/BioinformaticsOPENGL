@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <vector>
 #include <map>
@@ -16,9 +16,9 @@
 
 struct AssimpNodeData
 {
-    glm::mat4 transformation;
+    glm::mat4 transformation = glm::mat4(1.0f);
     std::string name;
-    int childrenCount;
+    int childrenCount = 0;
     std::vector<AssimpNodeData> children;
 };
 
@@ -71,13 +71,12 @@ public:
 private:
     void ReadMissingBones(const aiAnimation* animation, ModelAnimData& modelData)
     {
-        int size = animation->mNumChannels;
+        unsigned int size = animation->mNumChannels;
 
-        auto& boneInfoMap = modelData.GetBoneInfoMap(); // getting m_BoneInfoMap from ModelAnimData
-        int& boneCount = modelData.GetBoneCount(); // getting the m_BoneCounter from ModelAnimData
+        auto& boneInfoMap = modelData.GetBoneInfoMap();
+        int& boneCount = modelData.GetBoneCount();
 
-        // reading channels(bones engaged in an animation and their keyframes)
-        for (int i = 0; i < size; i++)
+        for (unsigned int i = 0; i < size; i++)
         {
             auto channel = animation->mChannels[i];
             std::string boneName = channel->mNodeName.data;
@@ -100,9 +99,9 @@ private:
 
         dest.name = src->mName.data;
         dest.transformation = AssimpGLMHelpers::ConvertMatrixToGLMFormat(src->mTransformation);
-        dest.childrenCount = src->mNumChildren;
+        dest.childrenCount = static_cast<int>(src->mNumChildren);
 
-        for (int i = 0; i < src->mNumChildren; i++)
+        for (unsigned int i = 0; i < src->mNumChildren; i++)
         {
             AssimpNodeData newData;
             ReadHierarchyData(newData, src->mChildren[i]);

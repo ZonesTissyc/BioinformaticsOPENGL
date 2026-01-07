@@ -15,13 +15,15 @@
 #include <custom/Projection.h> 
 #include <custom/ModelTrans.h> 
 
-// 引入 LearnOpenGL 的 Shader 类
+
 #include <custom/shader_m.h>
 
 #include "custom/model_anim_data.h"
 #include "custom/animation.h"
 #include "custom/animator.h"
 #include "custom/model_animated.h"
+#include <games/object.h>
+#include <games/charactor.h>
 
 #include <custom/timer.h>
 // 全局计时变量
@@ -149,10 +151,19 @@ int main() {
     Animation* animation = new Animation(glbPath, modelData.get(),10);
     auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
 
+    auto modelData2 = std::make_shared<ModelAnimData>(glbPath);
+    Animation* animation2 = new Animation(glbPath, modelData2.get(), 10);
+    auto modelAnimated2 = std::make_shared<ModelAnimated>(modelData2, std::shared_ptr<Animation>(animation2));
+
+    Charactor c2(modelAnimated2.get(), nullptr, glm::vec3(1.0f,0.0f,0.0f));
+   
+
     ModelTrans transmat;
     transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*6.0F);
     // transmat.rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
     // 着色器预设（投影可在窗口大小变化时更新）
+    ModelTrans transmat2;
+    transmat2.translate(c2.position);
     shader1.use();
     shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
 
@@ -228,7 +239,19 @@ int main() {
         // 绘制模型
 
         modelAnimated->Draw(shader1, camera.getPos());
+
+        shader1.use();
+
+        modelAnimated2->Update(deltaTime);
+
+        shader1.setMat4("view", camera.getView());
+        shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
+
+        // 模型变换
+        
+        shader1.setMat4("model", transmat2.getModelMatrix());
         // 绘制后36个顶点 (立方体)
+        c2.getModel()->Draw(shader1, camera.getPos());
         glDrawArrays(GL_TRIANGLES, 6, 36);
 
         // 交换缓冲区

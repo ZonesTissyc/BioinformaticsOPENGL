@@ -1,51 +1,23 @@
-﻿#pragma once
+#pragma once
+
+#include <games/object.h>
+#include <custom/model_base.h>
 #include <glm/glm.hpp>
-#include <vector>
 #include <iostream>
 
-class Character {
+// 所有人物的类，包括具有动画的玩家和敌人
+
+class Charactor : public Object {
 public:
     enum Action { Stay, Run, Attack };
 
-    Character(glm::vec3 pos = glm::vec3(0.0f))
-        : position(pos), front(0.0f, 0.0f, -1.0f), action(Saty), speed(2.5f), alive(true) {
+    Charactor(ModelBase* model, Shader* shader = nullptr, glm::vec3 position = glm::vec3(0.0f))
+        : Object(model, shader, position), action(Stay), speed(2.5f), alive(true) {
     }
 
-    // ---------- 属性 ----------
-    glm::vec3 position;
+    // 
     glm::vec3 front;
+    Action action;
     float speed;
     bool alive;
-    Action action;
-
-    // ---------- 动作 ----   ------
-    void moveForward(float dt) {
-        position += front * speed * dt;
-        action = Run;
-    }
-
-    void moveBackward(float dt) {
-        position -= front * speed * dt;
-        action = Run;
-    }
-
-    void stop() {
-        action = Idle;
-    }
-
-    // ---------- 射线接口 ----------
-    struct Ray {
-        glm::vec3 origin;
-        glm::vec3 dir;
-    };
-
-    Ray shoot() const {
-        return { position, front };
-    }
-
-    // ---------- 受伤 ----------
-    void takeDamage(float dmg) {
-        alive = false; // 简单处理
-        std::cout << "Character at " << position.x << "," << position.y << "," << position.z << " is dead\n";
-    }
 };
