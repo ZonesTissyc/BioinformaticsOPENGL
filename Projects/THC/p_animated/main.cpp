@@ -156,16 +156,12 @@ int main() {
     Charactor player2(playerModel.get(), &shader1, glm::vec3(5, 0, 0));
 
 
-   
-
     ModelTrans transmat;
     transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*6.0F);
     // transmat.rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
     // 着色器预设（投影可在窗口大小变化时更新）
     ModelTrans transmat2;
     transmat2.translate(player2.position);
-    shader1.use();
-    shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
 
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
@@ -224,34 +220,12 @@ int main() {
 
         
         // 绘制模型
-        shader1.use();
-
-        // 上传相机矩阵（custom::Camera 提供 getView()）
-        shader1.setMat4("view", camera.getView());
-        shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
-
-        // 模型变换
-        glm::mat4 modelMat = glm::mat4(1.0f);
-        shader1.setMat4("model", transmat.getModelMatrix());
-
-        modelAnimated->Update(deltaTime);
-
-        // 绘制模型
-
-        modelAnimated->Draw(shader1, camera.getPos());
-
-        shader1.use();
-
+		Renderer::BeginScene(camera, projMat, shader1);
         player2.Update(deltaTime);
+		player2.Draw(shader1);
 
-        shader1.setMat4("view", camera.getView());
-        shader1.setMat4("projection", glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f));
+        Renderer::EndScene();
 
-        // 模型变换
-        
-        shader1.setMat4("model", transmat2.getModelMatrix());
-        // 绘制后36个顶点 (立方体)
-		player2.Draw(camera.getPos());
         glDrawArrays(GL_TRIANGLES, 6, 36);
 
         // 交换缓冲区
