@@ -23,6 +23,7 @@
 #include "custom/animator.h"
 #include <custom/model_base.h>
 #include "custom/model_animated.h"
+#include <custom/model_static.h>
 #include <games/object.h>
 #include <games/character.h>
 #include <custom/timer.h>
@@ -44,7 +45,7 @@ int main() {
     // ------------------------------------------------------------------
     Camera camera(glm::vec3(0.0f, 0.2f, 3.0f));
     // 速度设为 2.5f, 鼠标灵敏度 0.1f
-    InputController controller(camera, 0.1f, 0.1f);
+    InputController controller(camera, 0.5f, 0.1f);
 
     // 3. 设置投影矩阵 (利用 custom/Projection.h)
     // -----------------------------------------
@@ -156,7 +157,7 @@ int main() {
     std::string glb5 = "fbx_toglb.glb";
     std::string glb6 = "fbx_toglb3.glb";
     std::string glb7 = "gltf_to_glb1.glb";
-    std::string glb8 = "swimming_pool_3d_scene.glb";
+    std::string glb8 = rootURL + "resources/model/swimming_pool/swimming_pool_3d_scene.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
     std::string glbPath = glb2;
 
@@ -165,7 +166,7 @@ int main() {
     auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
-    Character player2(playerModel.get(), &shader1, glm::vec3(0.0f, 0.2f, 3.0f));
+    Character player2(playerModel.get(), &shader1, glm::vec3(0.82f, 6.25f, -0.92f));
     player2.SetAction(Character::Action::Stay, false);
     controller.setCharacter(&player2);
 	PlayController playController(&player2, camera);
@@ -180,6 +181,16 @@ int main() {
     ModelTrans transmat2;
     transmat2.translate(player2.position);
 
+    // 加载静态模型
+    stbi_set_flip_vertically_on_load(false);
+	std::string shaderStaticVS = rootURL + "shaders/model_light.vs";
+	std::string shaderStaticFS = rootURL + "shaders/model_light.fs";
+    std::string glbStatic = glb8;
+	auto modelStatic = std::make_shared<ModelStatic>(glbStatic);
+	Shader shaderStatic(shaderStaticVS.c_str(), shaderStaticFS.c_str());
+	ModelTrans transmatStatic;
+    transmatStatic.scale(glm::vec3(1.0f) * 0.3f);
+	transmatStatic.translate(glm::vec3(0.0f, 19.0f, 0.0f));
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
 
@@ -246,8 +257,25 @@ int main() {
 		iui.showPos(camera.getPos(), 1.2f);
 		iui.endFrame();
 
+
+		// 绘制静态模型 - 需要单独设置 shaderStatic 的 uniform
+		shaderStatic.use();
+		shaderStatic.setMat4("projection", projMat);
+		shaderStatic.setMat4("view", viewMat);
+		shaderStatic.setVec3("viewPos", camera.getPos());
+		shaderStatic.setVec3("lightPos", lightPos);
+		shaderStatic.setVec4("materialColor", 1.0f, 1.0f, 1.0f, 1.0f);
+		shaderStatic.setBool("hasTexture", true);
+        // shaderStatic.setMat4("model", transmatStatic.getModelMatrix());
+		Renderer::Submit(shaderStatic, modelStatic.get(), transmatStatic.getModelMatrix());
+
         Renderer::EndScene();
 
+
+        iui.beginFrame();
+        iui.showFPS(1.4f);
+        iui.showPos(camera.getPos(), 1.2f);
+        iui.endFrame();
         glDrawArrays(GL_TRIANGLES, 6, 36);
 
         // 交换缓冲区
