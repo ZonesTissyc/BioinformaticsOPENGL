@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
@@ -195,7 +195,7 @@ int main() {
         glm::mat4 modelmat = glm::mat4(1.0f);
 
         // --- 1. 绘制地面 ---
-        colorShader.use();
+        colorShader.use(); 
         colorShader.setMat4("projection", projMat);
         colorShader.setMat4("view", viewMat);
 
