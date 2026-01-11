@@ -1,29 +1,39 @@
-﻿// InputController v 1.2
-#pragma once
+﻿#pragma once
 
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <custom/Camera.h> // 需要包含 Camera 类的头文件
+#include <custom/Camera.h>
+
+class Character;
+class PlayController;
 
 class InputController {
-private:
-    // 存储 Camera 对象的引用
-    Camera& controlledCamera_;
-
-    float cameraSpeed_; // 移动速率
-
-    // --- 新增鼠标控制参数 ---
-    float lastX_ = 400.0f;       // 上一帧鼠标 X 坐标（初始值设为窗口中心）
-    float lastY_ = 300.0f;       // 上一帧鼠标 Y 坐标
-    bool firstMouse_ = true;     // 是否是第一次接收鼠标输入
-    float sensitivity_ = 0.1f;   // 鼠标灵敏度
 public:
-   
-    InputController(Camera& camera, float speed, float sensitivity = 0.1f)
-        : controlledCamera_(camera), cameraSpeed_(speed), sensitivity_(sensitivity) {
-    }
+    enum class ControlTarget { Camera, Character };
 
-    // 处理键盘输入
+    InputController(Camera& camera, float speed, float sensitivity = 0.1f);
+
+    void setCharacter(Character* character);
+    void setPlayController(PlayController* controller);
+
     void processKeyboardInput(GLFWwindow* window, float deltaTime);
-    // 处理鼠标（旋转）
     void processMouseInput(GLFWwindow* window);
+
+private:
+    void processCameraInput(GLFWwindow* window, float deltaTime);
+    void processCharacterInput(GLFWwindow* window, float deltaTime);
+
+private:
+    Camera& controlledCamera_;
+    Character* controlledCharacter_ = nullptr;
+    PlayController* playController_ = nullptr;
+
+    ControlTarget currentTarget_ = ControlTarget::Camera;
+
+    float cameraSpeed_;
+    float sensitivity_ = 0.1f;
+
+    bool firstMouse_ = true;
+    float lastX_ = 400.0f;
+    float lastY_ = 300.0f;
 };
