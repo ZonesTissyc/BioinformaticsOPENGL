@@ -1,4 +1,4 @@
-// InputController v 1.2
+﻿// InputController v 1.2
 #include <custom/InputController.h>
 #include <games/character.h>
 #include <glm/glm.hpp>
@@ -42,7 +42,7 @@ void InputController::processKeyboardInput(GLFWwindow* window, float deltaTime) 
     {
         if (controlledCharacter_)
         {
-            controlledCharacter_->PlayAnimation("death");
+            controlledCharacter_->PlayAnimation("death", true);
         }
     }
 }

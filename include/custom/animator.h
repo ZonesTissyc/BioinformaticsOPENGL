@@ -15,13 +15,18 @@
 class Animator
 {
 public:
+    enum class AnimationPlayMode {
+        Loop,
+        Once
+    };
+
     Animator(Animation* animation = nullptr)
     {
         m_CurrentTime = 0.0f;
         m_CurrentAnimation = animation;
 
         int maxBoneID = -1;
-        if (animation) // 检查 animation 是否为空
+        if (animation)
         {
             auto& boneMap = animation->GetBoneIDMap();
             for (auto& item : boneMap)
@@ -30,6 +35,7 @@ public:
                     maxBoneID = item.second.id;
             }
         }
+
         int finalSize = std::max(100, maxBoneID + 1);
         m_FinalBoneMatrices.reserve(finalSize);
 
@@ -37,41 +43,72 @@ public:
             m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
     }
 
+    // ============================
+    // 核心：更新动画（支持 Once）
+    // ============================
     void UpdateAnimation(float dt)
     {
-        m_DeltaTime = dt;
-        if (m_CurrentAnimation)
-        {
-            m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
-            m_CurrentTime = std::fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
-            CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
-        }
-    }
-
-    void PlayAnimation(Animation* pAnimation)
-    {
-        m_CurrentAnimation = pAnimation;
-        m_CurrentTime = 0.0f;
-    }
-
-    void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform)
-    {
-        if (!node) return;
-        if (!m_CurrentAnimation) {
-            // 如果没有动画，仍需递归子节点以保持默认变换？通常直接 return。
-            for (int i = 0; i < node->childrenCount; ++i)
-                CalculateBoneTransform(&node->children[i], parentTransform * node->transformation);
+        if (!m_CurrentAnimation || m_Finished)
             return;
+
+        m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
+
+        float duration = m_CurrentAnimation->GetDuration();
+
+        if (m_PlayMode == AnimationPlayMode::Loop)
+        {
+            m_CurrentTime = std::fmod(m_CurrentTime, duration);
         }
+        else // Once
+        {
+            if (m_CurrentTime >= duration)
+            {
+                m_CurrentTime = duration; // 停在最后一帧
+                m_Finished = true;
+            }
+        }
+
+        CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(),
+            glm::mat4(1.0f));
+    }
+
+    // ============================
+    // 播放动画（防止每帧重播）
+    // ============================
+    void PlayAnimation(Animation* pAnimation,
+        AnimationPlayMode mode = AnimationPlayMode::Loop)
+    {
+        if (!pAnimation)
+            return;
+
+        if (m_CurrentAnimation == pAnimation && !m_Finished)
+            return;
+
+        m_CurrentAnimation = pAnimation;
+        m_PlayMode = mode;
+        m_CurrentTime = 0.0f;
+        m_Finished = false;
+    }
+
+    bool IsFinished() const { return m_Finished; }
+
+    // ============================
+    // 骨骼计算（未改）
+    // ============================
+    void CalculateBoneTransform(const AssimpNodeData* node,
+        glm::mat4 parentTransform)
+    {
+        if (!node || !m_CurrentAnimation)
+            return;
 
         const std::string& nodeName = node->name;
         glm::mat4 nodeTransform = node->transformation;
 
-        Bone* BonePtr = m_CurrentAnimation->FindBone(nodeName);
-        if (BonePtr)
+        Bone* bone = m_CurrentAnimation->FindBone(nodeName);
+        if (bone)
         {
-            BonePtr->Update(m_CurrentTime);
-            nodeTransform = BonePtr->GetLocalTransform();
+            bone->Update(m_CurrentTime);
+            nodeTransform = bone->GetLocalTransform();
         }
 
         glm::mat4 globalTransformation = parentTransform * nodeTransform;
@@ -90,8 +127,6 @@ public:
             CalculateBoneTransform(&node->children[i], globalTransformation);
     }
 
-
-    // 返回 const 引用，避免每帧拷贝
     const std::vector<glm::mat4>& GetFinalBoneMatrices() const
     {
         return m_FinalBoneMatrices;
@@ -99,7 +134,10 @@ public:
 
 private:
     std::vector<glm::mat4> m_FinalBoneMatrices;
+
     Animation* m_CurrentAnimation{ nullptr };
     float m_CurrentTime{ 0.0f };
-    float m_DeltaTime{ 0.0f };
+
+    AnimationPlayMode m_PlayMode{ AnimationPlayMode::Loop };
+    bool m_Finished{ false };
 };
