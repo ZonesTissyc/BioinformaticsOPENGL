@@ -153,7 +153,7 @@ int main() {
     auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
-    Character player2(playerModel.get(), &shader1, glm::vec3(5, 0, 0));
+    Character player2(playerModel.get(), &shader1, glm::vec3(0.0f, 0.2f, 3.0f));
     player2.SetAction(Character::Action::Run, false);
     controller.setCharacter(&player2);
 

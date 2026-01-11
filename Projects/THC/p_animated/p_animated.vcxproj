@@ -138,6 +138,7 @@
     <ClCompile Include="..\..\..\src\glad.c" />
     <ClCompile Include="..\..\..\src\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PlayController.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
