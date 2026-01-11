@@ -1,20 +1,25 @@
 ﻿#include <games/PlayController.h>
 #include <games/character.h>
+#include <custom/Camera.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-PlayController::PlayController(Character* character, float moveSpeed)
-    : controlledCharacter_(character), moveSpeed_(moveSpeed) {
+PlayController::PlayController(Character* character, Camera& camera, float moveSpeed)
+    : controlledCharacter_(character), controlledCamera_(camera), moveSpeed_(moveSpeed)
+{
 }
 
-void PlayController::processInput(GLFWwindow* window, float deltaTime) {
+void PlayController::processInput(GLFWwindow* window, float deltaTime)
+{
     if (!controlledCharacter_ || !controlledCharacter_->alive)
         return;
 
     handleMovement(window, deltaTime);
     handleActions(window);
+    updateCameraToHead(); // 每帧同步摄像机
 }
 
-void PlayController::handleMovement(GLFWwindow* window, float deltaTime) {
+void PlayController::handleMovement(GLFWwindow* window, float deltaTime)
+{
     glm::vec3 direction(0.0f);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) direction.z += 1.0f;
@@ -37,15 +42,26 @@ void PlayController::handleMovement(GLFWwindow* window, float deltaTime) {
     }
 }
 
-void PlayController::handleActions(GLFWwindow* window) {
-    // 攻击动作（一次性动画）
+void PlayController::handleActions(GLFWwindow* window)
+{
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
         controlledCharacter_->SetAction(Character::Action::Attack, true);
     }
 
-    // 死亡动作（一次性动画）
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
         controlledCharacter_->SetAction(Character::Action::Death, true);
         controlledCharacter_->alive = false;
     }
+}
+
+void PlayController::updateCameraToHead()
+{
+    if (!controlledCharacter_) return;
+
+    // 使用 Character 内部的头骨信息
+    glm::vec3 headPos = controlledCharacter_->headPosition + cameraOffset_;
+    glm::vec3 headForward = controlledCharacter_->headForward;
+
+    controlledCamera_.setPos(headPos);
+    controlledCamera_.setFront(headForward);
 }

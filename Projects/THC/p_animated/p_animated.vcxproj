@@ -136,6 +136,12 @@
     <ClCompile Include="..\..\..\src\custom\ModelTrans.cpp" />
     <ClCompile Include="..\..\..\src\custom\Projection.cpp" />
     <ClCompile Include="..\..\..\src\glad.c" />
+    <ClCompile Include="..\..\..\src\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\..\..\src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\..\src\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PlayController.cpp" />

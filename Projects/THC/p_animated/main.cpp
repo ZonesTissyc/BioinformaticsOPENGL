@@ -27,26 +27,28 @@
 #include <games/character.h>
 #include <custom/timer.h>
 #include <games/PlayController.h>
-
+#include <UI/iui.h>
 
 // 全局计时变量
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 int main() {
+
+    #pragma region openGL 基础设置
     // 1. 初始化窗口 (利用 custom/window.h)
     // ------------------------------------
-    Window window(1280, 720, "OpenGL Scene - Sky & Ground Test");
+    Window window(1920, 1080, "OpenGL Scene - Sky & Ground Test");
 
     // 2. 设置摄像机和输入控制 (利用 custom/Camera.h 和 InputController.h)
     // ------------------------------------------------------------------
     Camera camera(glm::vec3(0.0f, 0.2f, 3.0f));
     // 速度设为 2.5f, 鼠标灵敏度 0.1f
-    InputController controller(camera, 0.5f, 0.1f);
+    InputController controller(camera, 0.1f, 0.1f);
 
     // 3. 设置投影矩阵 (利用 custom/Projection.h)
     // -----------------------------------------
-    Projection projection(45.0f, 0.1f, 100.0f, 1280.0f, 720.0f);
+    Projection projection(45.0f, 0.001f, 100.0f, 1280.0f, 720.0f);
 
     // 4. 编译着色器
     // ------------------------------------
@@ -131,6 +133,14 @@ int main() {
     // 光源位置
     glm::vec3 lightPos(44.2f, 1.0f, 2.0f);
 
+    #pragma endregion
+
+    #pragma region imgui 基础设置
+    
+	Iui iui(window.get(), 1920, 1080);
+
+    #pragma endregion
+
 
     std::string rootURL = R"(../../../)";
     std::string vsURL = rootURL + "shaders/anim_model.vs";
@@ -156,15 +166,15 @@ int main() {
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     Character player2(playerModel.get(), &shader1, glm::vec3(0.0f, 0.2f, 3.0f));
-    player2.SetAction(Character::Action::Run, false);
+    player2.SetAction(Character::Action::Stay, false);
     controller.setCharacter(&player2);
-	PlayController playController(&player2);
+	PlayController playController(&player2, camera);
 
 	controller.setPlayController(&playController);
 	controller.setCharacter(&player2);
 
     ModelTrans transmat;
-    transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*6.0F);
+    transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*0.7F);
     // transmat.rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
     // 着色器预设（投影可在窗口大小变化时更新）
     ModelTrans transmat2;
@@ -231,6 +241,11 @@ int main() {
         player2.Update(deltaTime);
 		player2.Draw(shader1);
 		
+        iui.beginFrame();
+		iui.showFPS(1.4f);
+		iui.showPos(camera.getPos(), 1.2f);
+		iui.endFrame();
+
         Renderer::EndScene();
 
         glDrawArrays(GL_TRIANGLES, 6, 36);
