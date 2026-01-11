@@ -1,4 +1,4 @@
-﻿#include <glad/glad.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
@@ -155,6 +155,8 @@ int main() {
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     Character player2(playerModel.get(), &shader1, glm::vec3(5, 0, 0));
 
+    controller.setCharacter(&player2);
+
 
     ModelTrans transmat;
     transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*6.0F);
@@ -169,7 +171,7 @@ int main() {
     // timer类
     Timer timer;
     float dt = 0.0f;
-
+    int timeforani = 0;
     // 6. 渲染循环
     // ------------------------------------------------------------------
     while (window.noClose()) {
@@ -223,7 +225,7 @@ int main() {
 		Renderer::BeginScene(camera, projMat, shader1);
         player2.Update(deltaTime);
 		player2.Draw(shader1);
-
+		
         Renderer::EndScene();
 
         glDrawArrays(GL_TRIANGLES, 6, 36);

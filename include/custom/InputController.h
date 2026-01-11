@@ -2,28 +2,31 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include <custom/Camera.h> // 需要包含 Camera 类的头文件
+#include <custom/Camera.h>
+
+class Character;
 
 class InputController {
 private:
-    // 存储 Camera 对象的引用
     Camera& controlledCamera_;
+    Character* controlledCharacter_ = nullptr;
 
-    float cameraSpeed_; // 移动速率
+    float cameraSpeed_;
 
-    // --- 新增鼠标控制参数 ---
-    float lastX_ = 400.0f;       // 上一帧鼠标 X 坐标（初始值设为窗口中心）
-    float lastY_ = 300.0f;       // 上一帧鼠标 Y 坐标
-    bool firstMouse_ = true;     // 是否是第一次接收鼠标输入
-    float sensitivity_ = 0.1f;   // 鼠标灵敏度
+    float lastX_ = 400.0f;
+    float lastY_ = 300.0f;
+    bool firstMouse_ = true;
+    float sensitivity_ = 0.1f;
+
 public:
-   
     InputController(Camera& camera, float speed, float sensitivity = 0.1f)
         : controlledCamera_(camera), cameraSpeed_(speed), sensitivity_(sensitivity) {
     }
 
-    // 处理键盘输入
+    void setCharacter(Character* character) {
+        controlledCharacter_ = character;
+    }
+
     void processKeyboardInput(GLFWwindow* window, float deltaTime);
-    // 处理鼠标（旋转）
     void processMouseInput(GLFWwindow* window);
 };
