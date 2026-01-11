@@ -59,14 +59,12 @@ public:
     // ============================
     // 切换状态（统一管理动画播放）
     // ============================
-    void SetAction(Action newAction)
+    void SetAction(Action newAction, bool once = false)
     {
         if (action == newAction)
             return; // 状态未变，不重复播放
 
         action = newAction;
-
-        bool once = (action == Action::Attack); // 攻击动作只播放一次
 
         auto it = m_ActionToAnim.find(action);
         if (it != m_ActionToAnim.end())

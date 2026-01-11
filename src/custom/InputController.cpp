@@ -42,7 +42,7 @@ void InputController::processKeyboardInput(GLFWwindow* window, float deltaTime) 
     {
         if (controlledCharacter_)
         {
-            controlledCharacter_->PlayAnimation("death", true);
+            controlledCharacter_->SetAction(Character::Action::Death, true);
         }
     }
 }
