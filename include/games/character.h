@@ -14,6 +14,8 @@ public:
     // 动作枚举
     enum class Action { Stay, Run, Attack , Death};
 
+
+
     Character(ModelBase* modelPtr, Shader* shader = nullptr,
         glm::vec3 position = glm::vec3(0.0f))
         : Object(modelPtr, shader, position)
@@ -37,6 +39,10 @@ public:
 
         // 默认状态
         SetAction(Action::Stay);
+
+        // 初始化头骨信息
+        headPosition = glm::vec3(0.0f);
+        headForward = glm::vec3(0.0f, 0.0f, -1.0f);
     }
 
     // ============================
@@ -48,6 +54,11 @@ public:
 
         // 推进动画时间
         m_Animator->UpdateAnimation(deltaTime);
+
+        // 更新头骨信息（每帧）
+        UpdateHeadBoneInfo();
+
+
 
         // 一次性动画播完后自动回 Idle
         if (action == Action::Attack && m_Animator->IsFinished())
@@ -115,9 +126,31 @@ public:
     float speed{ 2.5f };
     bool alive{ true };
 
+    // 头骨成员变量（每帧更新）
+   // ============================
+    glm::vec3 headPosition;  // 世界空间位置
+    glm::vec3 headForward;   // 世界空间前方向
+
 private:
     ModelAnimated* pAnimModel{ nullptr };
     std::unique_ptr<Animator> m_Animator;
 
     std::map<Action, std::string> m_ActionToAnim;
+
+    // 每帧更新头骨信息
+  // ============================
+    void UpdateHeadBoneInfo()
+    {
+        if (!m_Animator) return;
+
+        constexpr int HEAD_BONE_INDEX = 15; // 你的头骨ID
+        const auto& bones = m_Animator->GetFinalBoneMatrices();
+
+        if (HEAD_BONE_INDEX < 0 || HEAD_BONE_INDEX >= (int)bones.size()) return;
+
+        const glm::mat4& headMat = bones[HEAD_BONE_INDEX];
+
+        headPosition = glm::vec3(headMat[3]); // 提取平移
+        headForward = glm::normalize(glm::vec3(headMat * glm::vec4(0, 0, -1, 0))); // -Z 为前
+    }
 };

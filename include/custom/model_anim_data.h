@@ -43,6 +43,34 @@ public:
     const std::string& GetDirectory() const { return directory; }
     const std::vector<Mesh>& GetMeshes() const { return meshes; }
 
+	// 调试用：打印头的骨信息
+    void DebugPrintHeadBone(const std::string& headName)
+    {
+        auto it = m_BoneInfoMap.find(headName);
+        if (it == m_BoneInfoMap.end())
+        {
+            std::cout << "[AnimData] Head bone NOT found: "
+                << headName << std::endl;
+            return;
+        }
+
+        const BoneInfo& info = it->second;
+
+        std::cout << "[AnimData] Head bone found!\n";
+        std::cout << "  name   : " << headName << "\n";
+        std::cout << "  id     : " << info.id << "\n";
+        std::cout << "  offset : \n";
+
+        const glm::mat4& m = info.offset;
+        for (int r = 0; r < 4; ++r)
+        {
+            std::cout << "    ";
+            for (int c = 0; c < 4; ++c)
+                std::cout << m[r][c] << " ";
+            std::cout << "\n";
+        }
+    }
+
 private:
     std::vector<Texture> textures_loaded;
     std::vector<Mesh> meshes;

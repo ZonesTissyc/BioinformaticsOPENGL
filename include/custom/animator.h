@@ -3,14 +3,11 @@
 #include <glm/glm.hpp>
 #include <map>
 #include <vector>
-#include <assimp/scene.h>
-#include <assimp/Importer.hpp>
+#include <algorithm>
+#include <cmath>
 
 #include <custom/animation.h>
 #include <custom/bone.h>
-
-#include <algorithm>
-#include <cmath>
 
 class Animator
 {
@@ -21,10 +18,8 @@ public:
     };
 
     Animator(Animation* animation = nullptr)
+        : m_CurrentAnimation(animation)
     {
-        m_CurrentTime = 0.0f;
-        m_CurrentAnimation = animation;
-
         int maxBoneID = -1;
         if (animation)
         {
@@ -37,14 +32,13 @@ public:
         }
 
         int finalSize = std::max(100, maxBoneID + 1);
-        m_FinalBoneMatrices.reserve(finalSize);
 
-        for (int i = 0; i < finalSize; i++)
-            m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
+        m_FinalBoneMatrices.resize(finalSize, glm::mat4(1.0f));
+        m_BoneWorldMatrices.resize(finalSize, glm::mat4(1.0f));
     }
 
     // ============================
-    // 核心：更新动画（支持 Once）
+    // 更新动画
     // ============================
     void UpdateAnimation(float dt)
     {
@@ -59,21 +53,23 @@ public:
         {
             m_CurrentTime = std::fmod(m_CurrentTime, duration);
         }
-        else // Once
+        else
         {
             if (m_CurrentTime >= duration)
             {
-                m_CurrentTime = duration; // 停在最后一帧
+                m_CurrentTime = duration;
                 m_Finished = true;
             }
         }
 
-        CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(),
-            glm::mat4(1.0f));
+        CalculateBoneTransform(
+            &m_CurrentAnimation->GetRootNode(),
+            glm::mat4(1.0f)
+        );
     }
 
     // ============================
-    // 播放动画（防止每帧重播）
+    // 播放动画
     // ============================
     void PlayAnimation(Animation* pAnimation,
         AnimationPlayMode mode = AnimationPlayMode::Loop)
@@ -93,47 +89,75 @@ public:
     bool IsFinished() const { return m_Finished; }
 
     // ============================
-    // 骨骼计算（未改）
+    // 关键：骨骼递归
     // ============================
-    void CalculateBoneTransform(const AssimpNodeData* node,
-        glm::mat4 parentTransform)
+    void CalculateBoneTransform(
+        const AssimpNodeData* node,
+        const glm::mat4& parentTransform)
     {
         if (!node || !m_CurrentAnimation)
             return;
 
-        const std::string& nodeName = node->name;
         glm::mat4 nodeTransform = node->transformation;
 
-        Bone* bone = m_CurrentAnimation->FindBone(nodeName);
+        Bone* bone = m_CurrentAnimation->FindBone(node->name);
         if (bone)
         {
             bone->Update(m_CurrentTime);
             nodeTransform = bone->GetLocalTransform();
         }
 
-        glm::mat4 globalTransformation = parentTransform * nodeTransform;
+        glm::mat4 globalTransform = parentTransform * nodeTransform;
 
         const auto& boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
-        auto it = boneInfoMap.find(nodeName);
+        auto it = boneInfoMap.find(node->name);
         if (it != boneInfoMap.end())
         {
             int index = it->second.id;
-            const glm::mat4& offset = it->second.offset;
+
             if (index >= 0 && index < (int)m_FinalBoneMatrices.size())
-                m_FinalBoneMatrices[index] = globalTransformation * offset;
+            {
+                // ✅ GPU 蒙皮用（原逻辑，保留）
+                m_FinalBoneMatrices[index] =
+                    globalTransform * it->second.offset;
+
+                // ✅ 新增：纯骨骼世界矩阵（给摄像机 / 逻辑用）
+                m_BoneWorldMatrices[index] = globalTransform;
+            }
         }
 
         for (int i = 0; i < node->childrenCount; i++)
-            CalculateBoneTransform(&node->children[i], globalTransformation);
+        {
+            CalculateBoneTransform(
+                &node->children[i],
+                globalTransform
+            );
+        }
     }
 
+    // ============================
+    // 原接口（给 Shader）
+    // ============================
     const std::vector<glm::mat4>& GetFinalBoneMatrices() const
     {
         return m_FinalBoneMatrices;
     }
 
+    // ============================
+    // ✅ 新接口（你现在最需要的）
+    // ============================
+    bool GetBoneWorldMatrix(int boneIndex, glm::mat4& out) const
+    {
+        if (boneIndex < 0 || boneIndex >= (int)m_BoneWorldMatrices.size())
+            return false;
+
+        out = m_BoneWorldMatrices[boneIndex];
+        return true;
+    }
+
 private:
-    std::vector<glm::mat4> m_FinalBoneMatrices;
+    std::vector<glm::mat4> m_FinalBoneMatrices;   // GPU 蒙皮
+    std::vector<glm::mat4> m_BoneWorldMatrices;   // 逻辑 / 摄像机
 
     Animation* m_CurrentAnimation{ nullptr };
     float m_CurrentTime{ 0.0f };
