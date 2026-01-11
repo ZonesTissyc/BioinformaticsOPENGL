@@ -6,14 +6,17 @@
 #include <custom/renderer.h>
 #include <glm/glm.hpp>
 #include <memory>
+#include <map>
+#include <string>
 
 class Character : public Object {
 public:
-    enum Action { Stay, Run, Attack };
+    // 动作枚举
+    enum class Action { Stay, Run, Attack };
 
     Character(ModelBase* modelPtr, Shader* shader = nullptr,
         glm::vec3 position = glm::vec3(0.0f))
-        : Object(modelPtr, shader, position), action(Stay)
+        : Object(modelPtr, shader, position)
     {
         pAnimModel = dynamic_cast<ModelAnimated*>(model);
 
@@ -23,24 +26,56 @@ public:
             m_Animator = std::make_unique<Animator>(
                 defaultAnim ? defaultAnim.get() : nullptr);
         }
+
+        // 初始化 Action → Animation 名称映射
+        m_ActionToAnim = {
+            { Action::Stay,   "idleWithoutGun" },
+            { Action::Run,    "Run" },
+            { Action::Attack, "Attack" }
+        };
+
+        // 默认状态
+        SetAction(Action::Stay);
     }
 
+    // ============================
+    // 状态机 Update
+    // ============================
     void Update(float deltaTime)
     {
         if (!m_Animator) return;
 
+        // 推进动画时间
         m_Animator->UpdateAnimation(deltaTime);
 
-        // 可选：一次性动画播完自动回 Idle
-        if (action == Attack && m_Animator->IsFinished())
+        // 一次性动画播完后自动回 Idle
+        if (action == Action::Attack && m_Animator->IsFinished())
         {
-            action = Stay;
-            PlayAnimation("idleWithoutGun");
+            SetAction(Action::Stay);
         }
     }
 
     // ============================
-    // 播放动画（支持 Once）
+    // 切换状态（统一管理动画播放）
+    // ============================
+    void SetAction(Action newAction)
+    {
+        if (action == newAction)
+            return; // 状态未变，不重复播放
+
+        action = newAction;
+
+        bool once = (action == Action::Attack); // 攻击动作只播放一次
+
+        auto it = m_ActionToAnim.find(action);
+        if (it != m_ActionToAnim.end())
+        {
+            PlayAnimation(it->second, once);
+        }
+    }
+
+    // ============================
+    // 播放动画（支持 Once / Loop）
     // ============================
     void PlayAnimation(const std::string& animName, bool once = false)
     {
@@ -56,6 +91,9 @@ public:
         );
     }
 
+    // ============================
+    // 绘制模型
+    // ============================
     void Draw(Shader& shader)
     {
         if (!model) return;
@@ -81,4 +119,6 @@ public:
 private:
     ModelAnimated* pAnimModel{ nullptr };
     std::unique_ptr<Animator> m_Animator;
+
+    std::map<Action, std::string> m_ActionToAnim;
 };
