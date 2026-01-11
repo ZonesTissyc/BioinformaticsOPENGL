@@ -25,8 +25,10 @@
 #include "custom/model_animated.h"
 #include <games/object.h>
 #include <games/character.h>
-
 #include <custom/timer.h>
+#include <games/PlayController.h>
+
+
 // 全局计时变量
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -156,7 +158,10 @@ int main() {
     Character player2(playerModel.get(), &shader1, glm::vec3(0.0f, 0.2f, 3.0f));
     player2.SetAction(Character::Action::Run, false);
     controller.setCharacter(&player2);
+	PlayController playController(&player2);
 
+	controller.setPlayController(&playController);
+	controller.setCharacter(&player2);
 
     ModelTrans transmat;
     transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*6.0F);

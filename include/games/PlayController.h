@@ -3,8 +3,7 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-class Character;
+#include <games/character.h>
 
 class PlayController {
 public:

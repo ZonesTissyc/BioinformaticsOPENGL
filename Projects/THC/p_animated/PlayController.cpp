@@ -40,12 +40,12 @@ void PlayController::handleMovement(GLFWwindow* window, float deltaTime) {
 void PlayController::handleActions(GLFWwindow* window) {
     // 攻击动作（一次性动画）
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-        controlledCharacter_->SetAction(Character::Action::Attack);
+        controlledCharacter_->SetAction(Character::Action::Attack, true);
     }
 
     // 死亡动作（一次性动画）
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-        controlledCharacter_->SetAction(Character::Action::Death);
+        controlledCharacter_->SetAction(Character::Action::Death, true);
         controlledCharacter_->alive = false;
     }
 }
