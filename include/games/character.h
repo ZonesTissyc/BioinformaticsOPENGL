@@ -12,7 +12,7 @@
 class Character : public Object {
 public:
     // 动作枚举
-    enum class Action { Stay, Run, Attack };
+    enum class Action { Stay, Run, Attack , Death};
 
     Character(ModelBase* modelPtr, Shader* shader = nullptr,
         glm::vec3 position = glm::vec3(0.0f))
@@ -29,10 +29,11 @@ public:
 
         // 初始化 Action → Animation 名称映射
         m_ActionToAnim = {
-            { Action::Stay,   "idleWithoutGun" },
-            { Action::Run,    "Run" },
-            { Action::Attack, "Attack" }
-        };
+    { Action::Stay,  "idleWoutGun" }, // idleWithoutGun
+    { Action::Run,   "run" },         // run
+    { Action::Attack,"shooting" },
+    { Action::Death, "death" },
+	    };
 
         // 默认状态
         SetAction(Action::Stay);

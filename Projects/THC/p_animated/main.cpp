@@ -154,7 +154,7 @@ int main() {
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     Character player2(playerModel.get(), &shader1, glm::vec3(5, 0, 0));
-    player2.PlayAnimation("shooting", false);
+    player2.SetAction(Character::Action::Death);
     controller.setCharacter(&player2);
 
 
