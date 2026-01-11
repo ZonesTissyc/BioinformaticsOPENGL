@@ -7,12 +7,13 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <memory>
+#include <custom/ModelTrans.h>
 
-class Charactor : public Object {
+class Character : public Object {
 public:
     enum Action { Stay, Run, Attack };
 
-    Charactor(ModelBase* modelPtr, Shader* shader = nullptr, glm::vec3 position = glm::vec3(0.0f))
+    Character(ModelBase* modelPtr, Shader* shader = nullptr, glm::vec3 position = glm::vec3(0.0f))
         : Object(modelPtr, shader, position), action(Stay), speed(2.5f), alive(true)
     {
         pAnimModel = dynamic_cast<ModelAnimated*>(model);

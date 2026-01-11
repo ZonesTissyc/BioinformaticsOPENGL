@@ -24,7 +24,7 @@
 #include <custom/model_base.h>
 #include "custom/model_animated.h"
 #include <games/object.h>
-#include <games/charactor.h>
+#include <games/character.h>
 
 #include <custom/timer.h>
 // 全局计时变量
@@ -153,7 +153,7 @@ int main() {
     auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
-    Charactor player2(playerModel.get(), &shader1, glm::vec3(5, 0, 0));
+    Character player2(playerModel.get(), &shader1, glm::vec3(5, 0, 0));
 
 
     ModelTrans transmat;

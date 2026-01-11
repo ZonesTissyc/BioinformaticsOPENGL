@@ -112,15 +112,27 @@ public:
 
         if (scene && scene->mRootNode && scene->mNumAnimations > 0)
         {
+            std::cout << "=== Loading Animations ===" << std::endl;
+            std::cout << "Model: " << modelPath << std::endl;
+            std::cout << "Found " << scene->mNumAnimations << " animation(s):" << std::endl;
+            
             for (unsigned int i = 0; i < scene->mNumAnimations; ++i)
             {
                 std::string animName = scene->mAnimations[i]->mName.C_Str();
                 if (animName.empty()) animName = "animation_" + std::to_string(i);
 
+                std::cout << "  [" << i << "] " << animName << std::endl;
+
                 auto animation = std::make_shared<Animation>(modelPath, data.get(), i);
                 animations[animName] = animation;
             }
+            std::cout << "===========================" << std::endl;
         }
+        else
+        {
+            std::cout << "Warning: No animations found in " << modelPath << std::endl;
+        }
+        
         return std::make_shared<ModelAnimated>(data, animations);
     }
 
