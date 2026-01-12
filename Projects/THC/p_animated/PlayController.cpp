@@ -47,8 +47,8 @@ void PlayController::handleMovement(GLFWwindow* window, float deltaTime)
         glm::vec3 moveDir = forward * direction.z + right * direction.x;
         controlledCharacter_->position += moveDir * moveSpeed_ * deltaTime;
 
-        // 切换 Run 动画
-        controlledCharacter_->SetAction(Character::Action::Run);
+        // 切换 Walk 动画
+        controlledCharacter_->SetAction(Character::Action::Walk);
     }
     else {
         // 切换 Idle 动画
@@ -64,6 +64,11 @@ void PlayController::handleActions(GLFWwindow* window)
 
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
         controlledCharacter_->SetAction(Character::Action::Death, true);
+        // controlledCharacter_->alive = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
+        controlledCharacter_->SetAction(Character::Action::Stay, true);
         // controlledCharacter_->alive = false;
     }
 }
@@ -100,7 +105,8 @@ void PlayController::updateCameraToHead()
     glm::vec3 camPos =
         headPos
         + headForward * backDist          // 往头骨反方向（后方）拉开距离
-        + glm::vec3(0.0f, upOffset, 0.0f); // 稍微抬高一点
+        + glm::vec3(0.0f, upOffset, 0.0f) // 稍微抬高一点
+		+ glm::vec3(cameraOffset_.x, 0.0f, 0.0f); // 侧偏一点，避免遮挡角色
 
     controlledCamera_.setPos(camPos);
     controlledCamera_.setFront(headForward);  // 始终朝向头骨前方

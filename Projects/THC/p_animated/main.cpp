@@ -49,7 +49,7 @@ int main() {
 
     // 3. 设置投影矩阵 (利用 custom/Projection.h)
     // -----------------------------------------
-    Projection projection(45.0f, 0.001f, 100.0f, 1280.0f, 720.0f);
+    Projection projection(45.0f, 0.001f, 100.0f, 1920.0f, 1080.0f);
 
     // 4. 编译着色器
     // ------------------------------------
@@ -167,19 +167,18 @@ int main() {
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     Character player2(playerModel.get(), &shader1, glm::vec3(0.82f, 6.25f, -0.92f));
+    
+    // 正确设置 player2 的缩放大小（Character::Draw() 会使用这个 scale）
+    player2.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+    
     player2.SetAction(Character::Action::Stay, false);
     controller.setCharacter(&player2);
-	PlayController playController(&player2, camera);
+	// 创建 PlayController，第三个参数是移动速度（单位：单位/秒）
+	// 默认值是 2.5f，可以根据需要调整（例如：1.0f 更慢，5.0f 更快）
+	PlayController playController(&player2, camera, 0.55f);
 
 	controller.setPlayController(&playController);
 	controller.setCharacter(&player2);
-
-    ModelTrans transmat;
-    transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*0.7F);
-    // transmat.rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-    // 着色器预设（投影可在窗口大小变化时更新）
-    ModelTrans transmat2;
-    transmat2.translate(player2.position);
 
     // 加载静态模型
     stbi_set_flip_vertically_on_load(false);
@@ -250,13 +249,8 @@ int main() {
         // 绘制模型
 		Renderer::BeginScene(camera, projMat, shader1);
         player2.Update(deltaTime);
-		player2.Draw(shader1);
+		player2.Draw(shader1);  // Character::Draw() 内部会设置正确的 model 矩阵（包含 scale）
 		
-        iui.beginFrame();
-		iui.showFPS(1.4f);
-		iui.showPos(camera.getPos(), 1.2f);
-		iui.endFrame();
-
 
 		// 绘制静态模型 - 需要单独设置 shaderStatic 的 uniform
 		shaderStatic.use();
@@ -275,6 +269,7 @@ int main() {
         iui.beginFrame();
         iui.showFPS(1.4f);
         iui.showPos(camera.getPos(), 1.2f);
+        iui.drawCrosshair();
         iui.endFrame();
         glDrawArrays(GL_TRIANGLES, 6, 36);
 

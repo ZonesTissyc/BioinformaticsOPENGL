@@ -14,7 +14,7 @@
 class Character : public Object {
 public:
     // 动作枚举
-    enum class Action { Stay, Run, Attack , Death};
+    enum class Action { Stay, Run, Attack , Death, Walk};
 
 
 
@@ -37,6 +37,7 @@ public:
     { Action::Run,   "run" },         // run
     { Action::Attack,"shooting" },
     { Action::Death, "death" },
+	{Action::Walk, "walk" },
 	    };
 
         // 默认状态
@@ -49,7 +50,7 @@ public:
         // 初始化 front 向量，使其与 yaw 角度一致
         glm::vec3 initialFront;
         initialFront.x = cos(glm::radians(yaw));
-        initialFront.y = 0.0f;
+        initialFront.y = 0.0f; 
         initialFront.z = sin(glm::radians(yaw));
         front = glm::normalize(initialFront);
     }
