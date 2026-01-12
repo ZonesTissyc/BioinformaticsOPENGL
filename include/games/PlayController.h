@@ -19,7 +19,7 @@ private:
     float moveSpeed_;
 
     // 偏移，让摄像机高于头部一点
-    glm::vec3 cameraOffset_ = glm::vec3(0.0f, 0.1f, 0.0f);
+    glm::vec3 cameraOffset_ = glm::vec3(0.00f, 0.0050f, 0.030f);
 
     // 内部方法
     void handleMovement(GLFWwindow* window, float deltaTime);

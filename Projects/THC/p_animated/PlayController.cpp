@@ -45,12 +45,12 @@ void PlayController::handleMovement(GLFWwindow* window, float deltaTime)
 void PlayController::handleActions(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-        controlledCharacter_->SetAction(Character::Action::Attack, true);
+        controlledCharacter_->SetAction(Character::Action::Attack, false);
     }
 
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
         controlledCharacter_->SetAction(Character::Action::Death, true);
-        controlledCharacter_->alive = false;
+        // controlledCharacter_->alive = false;
     }
 }
 
