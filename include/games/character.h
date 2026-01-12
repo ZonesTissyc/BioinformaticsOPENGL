@@ -14,6 +14,8 @@ public:
     // 动作枚举
     enum class Action { Stay, Run, Attack , Death};
 
+
+
     Character(ModelBase* modelPtr, Shader* shader = nullptr,
         glm::vec3 position = glm::vec3(0.0f))
         : Object(modelPtr, shader, position)
@@ -37,6 +39,10 @@ public:
 
         // 默认状态
         SetAction(Action::Stay);
+
+        // 初始化头骨信息
+        headPosition = glm::vec3(0.0f);
+        headForward = glm::vec3(0.0f, 0.0f, -1.0f);
     }
 
     // ============================
@@ -48,6 +54,11 @@ public:
 
         // 推进动画时间
         m_Animator->UpdateAnimation(deltaTime);
+
+        // 更新头骨信息（每帧）
+        UpdateHeadBoneInfo();
+
+
 
         // 一次性动画播完后自动回 Idle
         if (action == Action::Attack && m_Animator->IsFinished())
@@ -115,9 +126,39 @@ public:
     float speed{ 2.5f };
     bool alive{ true };
 
+    // 头骨成员变量（每帧更新）
+   // ============================
+    glm::vec3 headPosition;  // 世界空间位置
+    glm::vec3 headForward;   // 世界空间前方向
+
 private:
     ModelAnimated* pAnimModel{ nullptr };
     std::unique_ptr<Animator> m_Animator;
 
     std::map<Action, std::string> m_ActionToAnim;
+
+    // 每帧更新头骨信息
+  // ============================
+    void UpdateHeadBoneInfo()
+    {
+        if (!m_Animator) return;
+
+        constexpr int HEAD_BONE_INDEX = 15; // 你的头骨ID
+        
+        // 获取骨骼世界矩阵（相对于模型根节点）
+        glm::mat4 boneWorldMat;
+        if (!m_Animator->GetBoneWorldMatrix(HEAD_BONE_INDEX, boneWorldMat))
+            return;
+
+        // 计算模型矩阵（与 Draw() 中一致，用于转换到世界空间）
+        glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), position);
+        modelMat = glm::scale(modelMat, scale);
+
+        // 将骨骼矩阵转换为世界空间：模型矩阵 × 骨骼世界矩阵
+        glm::mat4 worldHeadMat = modelMat * boneWorldMat;
+
+        // 提取世界空间位置和方向
+        headPosition = glm::vec3(worldHeadMat[3]); // 提取平移
+        headForward = glm::normalize(glm::vec3(worldHeadMat * glm::vec4(0, 0.0f, 1.0f, 0))); // -Z 为前
+    }
 };

@@ -23,20 +23,23 @@
 #include "custom/animator.h"
 #include <custom/model_base.h>
 #include "custom/model_animated.h"
+#include <custom/model_static.h>
 #include <games/object.h>
 #include <games/character.h>
 #include <custom/timer.h>
 #include <games/PlayController.h>
-
+#include <UI/iui.h>
 
 // 全局计时变量
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 int main() {
+
+    #pragma region openGL 基础设置
     // 1. 初始化窗口 (利用 custom/window.h)
     // ------------------------------------
-    Window window(1280, 720, "OpenGL Scene - Sky & Ground Test");
+    Window window(1920, 1080, "OpenGL Scene - Sky & Ground Test");
 
     // 2. 设置摄像机和输入控制 (利用 custom/Camera.h 和 InputController.h)
     // ------------------------------------------------------------------
@@ -46,7 +49,7 @@ int main() {
 
     // 3. 设置投影矩阵 (利用 custom/Projection.h)
     // -----------------------------------------
-    Projection projection(45.0f, 0.1f, 100.0f, 1280.0f, 720.0f);
+    Projection projection(45.0f, 0.001f, 100.0f, 1280.0f, 720.0f);
 
     // 4. 编译着色器
     // ------------------------------------
@@ -131,6 +134,14 @@ int main() {
     // 光源位置
     glm::vec3 lightPos(44.2f, 1.0f, 2.0f);
 
+    #pragma endregion
+
+    #pragma region imgui 基础设置
+    
+	Iui iui(window.get(), 1920, 1080);
+
+    #pragma endregion
+
 
     std::string rootURL = R"(../../../)";
     std::string vsURL = rootURL + "shaders/anim_model.vs";
@@ -146,7 +157,7 @@ int main() {
     std::string glb5 = "fbx_toglb.glb";
     std::string glb6 = "fbx_toglb3.glb";
     std::string glb7 = "gltf_to_glb1.glb";
-    std::string glb8 = "swimming_pool_3d_scene.glb";
+    std::string glb8 = rootURL + "resources/model/swimming_pool/swimming_pool_3d_scene.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
     std::string glbPath = glb2;
 
@@ -155,21 +166,31 @@ int main() {
     auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
-    Character player2(playerModel.get(), &shader1, glm::vec3(0.0f, 0.2f, 3.0f));
-    player2.SetAction(Character::Action::Run, false);
+    Character player2(playerModel.get(), &shader1, glm::vec3(0.82f, 6.25f, -0.92f));
+    player2.SetAction(Character::Action::Stay, false);
     controller.setCharacter(&player2);
-	PlayController playController(&player2);
+	PlayController playController(&player2, camera);
 
 	controller.setPlayController(&playController);
 	controller.setCharacter(&player2);
 
     ModelTrans transmat;
-    transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*6.0F);
+    transmat.scale(glm::vec3(1.0f, 1.0f, 1.0f)*0.7F);
     // transmat.rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
     // 着色器预设（投影可在窗口大小变化时更新）
     ModelTrans transmat2;
     transmat2.translate(player2.position);
 
+    // 加载静态模型
+    stbi_set_flip_vertically_on_load(false);
+	std::string shaderStaticVS = rootURL + "shaders/model_light.vs";
+	std::string shaderStaticFS = rootURL + "shaders/model_light.fs";
+    std::string glbStatic = glb8;
+	auto modelStatic = std::make_shared<ModelStatic>(glbStatic);
+	Shader shaderStatic(shaderStaticVS.c_str(), shaderStaticFS.c_str());
+	ModelTrans transmatStatic;
+    transmatStatic.scale(glm::vec3(1.0f) * 0.3f);
+	transmatStatic.translate(glm::vec3(0.0f, 19.0f, 0.0f));
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
 
@@ -231,8 +252,30 @@ int main() {
         player2.Update(deltaTime);
 		player2.Draw(shader1);
 		
+        iui.beginFrame();
+		iui.showFPS(1.4f);
+		iui.showPos(camera.getPos(), 1.2f);
+		iui.endFrame();
+
+
+		// 绘制静态模型 - 需要单独设置 shaderStatic 的 uniform
+		shaderStatic.use();
+		shaderStatic.setMat4("projection", projMat);
+		shaderStatic.setMat4("view", viewMat);
+		shaderStatic.setVec3("viewPos", camera.getPos());
+		shaderStatic.setVec3("lightPos", lightPos);
+		shaderStatic.setVec4("materialColor", 1.0f, 1.0f, 1.0f, 1.0f);
+		shaderStatic.setBool("hasTexture", true);
+        // shaderStatic.setMat4("model", transmatStatic.getModelMatrix());
+		Renderer::Submit(shaderStatic, modelStatic.get(), transmatStatic.getModelMatrix());
+
         Renderer::EndScene();
 
+
+        iui.beginFrame();
+        iui.showFPS(1.4f);
+        iui.showPos(camera.getPos(), 1.2f);
+        iui.endFrame();
         glDrawArrays(GL_TRIANGLES, 6, 36);
 
         // 交换缓冲区

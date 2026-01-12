@@ -16,6 +16,7 @@
 class ModelAnimated  : public ModelBase
 {
 public:
+
     ModelAnimated(std::shared_ptr<ModelAnimData> data,
         std::shared_ptr<Animation> animation)
         : m_Data(std::move(data))
@@ -110,6 +111,8 @@ public:
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(modelPath, aiProcess_Triangulate);
 
+
+
         if (scene && scene->mRootNode && scene->mNumAnimations > 0)
         {
             std::cout << "=== Loading Animations ===" << std::endl;
@@ -133,6 +136,7 @@ public:
             std::cout << "Warning: No animations found in " << modelPath << std::endl;
         }
         
+
         return std::make_shared<ModelAnimated>(data, animations);
     }
 
@@ -141,3 +145,18 @@ private:
     std::map<std::string, std::shared_ptr<Animation>> m_Animations;
     // 移除了 m_Animator, m_CurrentAnimationName
 };
+
+static aiNode* FindNode(aiNode* node, const std::string& name)
+{
+    if (!node) return nullptr;
+
+    if (node->mName.C_Str() == name)
+        return node;
+
+    for (unsigned i = 0; i < node->mNumChildren; ++i)
+    {
+        aiNode* res = FindNode(node->mChildren[i], name);
+        if (res) return res;
+    }
+    return nullptr;
+}
