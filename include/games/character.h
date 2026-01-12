@@ -173,6 +173,6 @@ private:
 
         // 提取世界空间位置和方向
         headPosition = glm::vec3(worldHeadMat[3]); // 提取平移
-        headForward = glm::normalize(glm::vec3(worldHeadMat * glm::vec4(0, 0.0f, 1.0f, 0))); // -Z 为前
+        headForward = glm::normalize(glm::vec3(worldHeadMat * glm::vec4(0, 0, -1, 0))); // -Z 为前
     }
 };
