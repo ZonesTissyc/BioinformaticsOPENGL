@@ -144,13 +144,21 @@ private:
         if (!m_Animator) return;
 
         constexpr int HEAD_BONE_INDEX = 15; // 你的头骨ID
-        const auto& bones = m_Animator->GetFinalBoneMatrices();
+        
+        // 获取骨骼世界矩阵（相对于模型根节点）
+        glm::mat4 boneWorldMat;
+        if (!m_Animator->GetBoneWorldMatrix(HEAD_BONE_INDEX, boneWorldMat))
+            return;
 
-        if (HEAD_BONE_INDEX < 0 || HEAD_BONE_INDEX >= (int)bones.size()) return;
+        // 计算模型矩阵（与 Draw() 中一致，用于转换到世界空间）
+        glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), position);
+        modelMat = glm::scale(modelMat, scale);
 
-        const glm::mat4& headMat = bones[HEAD_BONE_INDEX];
+        // 将骨骼矩阵转换为世界空间：模型矩阵 × 骨骼世界矩阵
+        glm::mat4 worldHeadMat = modelMat * boneWorldMat;
 
-        headPosition = glm::vec3(headMat[3]); // 提取平移
-        headForward = glm::normalize(glm::vec3(headMat * glm::vec4(0, 0, -1, 0))); // -Z 为前
+        // 提取世界空间位置和方向
+        headPosition = glm::vec3(worldHeadMat[3]); // 提取平移
+        headForward = glm::normalize(glm::vec3(worldHeadMat * glm::vec4(0, 0, -1, 0))); // -Z 为前
     }
 };
