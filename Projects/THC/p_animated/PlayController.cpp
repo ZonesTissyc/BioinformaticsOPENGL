@@ -47,12 +47,20 @@ void PlayController::handleMovement(GLFWwindow* window, float deltaTime)
         glm::vec3 moveDir = forward * direction.z + right * direction.x;
         controlledCharacter_->position += moveDir * moveSpeed_ * deltaTime;
 
-        // 切换 Walk 动画
+        // 切换到 Walk 动画（如果之前暂停了，会自动继续）
         controlledCharacter_->SetAction(Character::Action::Walk);
     }
     else {
-        // 切换 Idle 动画
-        controlledCharacter_->SetAction(Character::Action::Stay);
+        // 松开W键时，暂停Walk动画（保持在当前帧），不切换回Stay
+        if (controlledCharacter_->action == Character::Action::Walk)
+        {
+            controlledCharacter_->PauseWalkAnimation();
+        }
+        else
+        {
+            // 如果当前不是Walk状态，切换到Stay
+            controlledCharacter_->SetAction(Character::Action::Stay);
+        }
     }
 }
 
