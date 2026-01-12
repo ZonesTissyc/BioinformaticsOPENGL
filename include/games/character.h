@@ -145,11 +145,12 @@ public:
 
         yaw += xoffset;
 
-        // 更新 front 方向向量（基于 yaw 角度）
+        // 更新 front 方向向量（基于 yaw + 90.0f，与模型旋转保持一致）
+        float adjustedYaw = yaw + 90.0f;  // 与 Draw() 和 UpdateHeadBoneInfo() 中的旋转保持一致
         glm::vec3 newFront;
-        newFront.x = cos(glm::radians(yaw));
+        newFront.x = cos(glm::radians(adjustedYaw));
         newFront.y = 0.0f;  // 保持水平旋转
-        newFront.z = sin(glm::radians(yaw));
+        newFront.z = sin(glm::radians(adjustedYaw));
         front = glm::normalize(newFront);
     }
 
@@ -196,5 +197,12 @@ private:
         // 提取世界空间位置和方向
         headPosition = glm::vec3(worldHeadMat[3]); // 提取平移
         headForward = glm::normalize(glm::vec3(worldHeadMat * glm::vec4(0, 0.0f, 1.0f, 0))); // -Z 为前
+        
+        // 更新 front 为头骨的水平投影方向（确保与摄像机方向一致）
+        glm::vec3 headForwardHorizontal = glm::vec3(headForward.x, 0.0f, headForward.z);
+        float horizontalLen = glm::length(headForwardHorizontal);
+        if (horizontalLen > 1e-4f) {
+            front = glm::normalize(headForwardHorizontal);
+        }
     }
 };
