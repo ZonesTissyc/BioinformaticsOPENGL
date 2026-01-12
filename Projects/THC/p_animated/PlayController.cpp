@@ -29,12 +29,18 @@ void PlayController::handleMovement(GLFWwindow* window, float deltaTime)
 
     if (glm::length(direction) > 0.0f) {
         direction = glm::normalize(direction);
-        controlledCharacter_->position += direction * moveSpeed_ * deltaTime;
+        
+        // 基于角色的 yaw 角度计算移动方向
+        float yawRad = glm::radians(controlledCharacter_->yaw);
+        glm::vec3 forward = glm::vec3(cos(yawRad), 0.0f, sin(yawRad));
+        glm::vec3 right = glm::vec3(-sin(yawRad), 0.0f, cos(yawRad));
+        
+        // 计算世界空间移动方向
+        glm::vec3 moveDir = forward * direction.z + right * direction.x;
+        controlledCharacter_->position += moveDir * moveSpeed_ * deltaTime;
 
         // 切换 Run 动画
         controlledCharacter_->SetAction(Character::Action::Run);
-        // 朝向移动方向
-        controlledCharacter_->front = glm::normalize(direction);
     }
     else {
         // 切换 Idle 动画
@@ -52,6 +58,14 @@ void PlayController::handleActions(GLFWwindow* window)
         controlledCharacter_->SetAction(Character::Action::Death, true);
         // controlledCharacter_->alive = false;
     }
+}
+
+void PlayController::processMouseInput(float xoffset, float yoffset, float sensitivity)
+{
+    if (!controlledCharacter_ || !controlledCharacter_->alive)
+        return;
+    
+    controlledCharacter_->ProcessMouseRotation(xoffset, yoffset, sensitivity);
 }
 
 void PlayController::updateCameraToHead()

@@ -12,6 +12,9 @@ public:
 
     // 每帧处理输入
     void processInput(GLFWwindow* window, float deltaTime);
+    
+    // 处理鼠标输入（用于控制角色转向）
+    void processMouseInput(float xoffset, float yoffset, float sensitivity = 0.1f);
 
 private:
     Character* controlledCharacter_ = nullptr;

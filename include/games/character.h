@@ -4,7 +4,9 @@
 #include <custom/model_animated.h>
 #include <custom/animator.h>
 #include <custom/renderer.h>
+#include <custom/ModelTrans.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <map>
 #include <string>
@@ -43,6 +45,13 @@ public:
         // 初始化头骨信息
         headPosition = glm::vec3(0.0f);
         headForward = glm::vec3(0.0f, 0.0f, -1.0f);
+        
+        // 初始化 front 向量，使其与 yaw 角度一致
+        glm::vec3 initialFront;
+        initialFront.x = cos(glm::radians(yaw));
+        initialFront.y = 0.0f;
+        initialFront.z = sin(glm::radians(yaw));
+        front = glm::normalize(initialFront);
     }
 
     // ============================
@@ -108,8 +117,13 @@ public:
     {
         if (!model) return;
 
-        glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), position);
-        modelMat = glm::scale(modelMat, scale);
+        // 使用 ModelTrans 来构建模型矩阵
+        ModelTrans modelTrans;
+        modelTrans.translate(position);
+        modelTrans.rotate(yaw + 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));  // +90 度是因为模型初始朝向可能是 X 方向
+        modelTrans.scale(scale);
+        
+        glm::mat4 modelMat = modelTrans.getModelMatrix();
 
         const auto& bones =
             (pAnimModel && m_Animator)
@@ -121,10 +135,29 @@ public:
 
     Animator* GetAnimator() const { return m_Animator.get(); }
 
+    // ============================
+    // 处理鼠标旋转
+    // ============================
+    void ProcessMouseRotation(float xoffset, float yoffset, float sensitivity = 0.1f)
+    {
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        yaw += xoffset;
+
+        // 更新 front 方向向量（基于 yaw 角度）
+        glm::vec3 newFront;
+        newFront.x = cos(glm::radians(yaw));
+        newFront.y = 0.0f;  // 保持水平旋转
+        newFront.z = sin(glm::radians(yaw));
+        front = glm::normalize(newFront);
+    }
+
 public:
     Action action;
     float speed{ 2.5f };
     bool alive{ true };
+    float yaw{ -90.0f };  // 水平旋转角度（度），初始朝向 -Z 方向
 
     // 头骨成员变量（每帧更新）
    // ============================
@@ -150,9 +183,12 @@ private:
         if (!m_Animator->GetBoneWorldMatrix(HEAD_BONE_INDEX, boneWorldMat))
             return;
 
-        // 计算模型矩阵（与 Draw() 中一致，用于转换到世界空间）
-        glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), position);
-        modelMat = glm::scale(modelMat, scale);
+        // 计算模型矩阵（与 Draw() 中一致，必须包含旋转！）
+        ModelTrans modelTrans;
+        modelTrans.translate(position);
+        modelTrans.rotate(yaw + 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));  // 与 Draw() 中的旋转保持一致
+        modelTrans.scale(scale);
+        glm::mat4 modelMat = modelTrans.getModelMatrix();
 
         // 将骨骼矩阵转换为世界空间：模型矩阵 × 骨骼世界矩阵
         glm::mat4 worldHeadMat = modelMat * boneWorldMat;
