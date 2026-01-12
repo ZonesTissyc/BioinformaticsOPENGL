@@ -12,6 +12,9 @@ public:
 
     // 每帧处理输入
     void processInput(GLFWwindow* window, float deltaTime);
+    
+    // 处理鼠标旋转（只处理水平旋转）
+    void processMouseRotation(float xoffset);
 
 private:
     Character* controlledCharacter_ = nullptr;
@@ -25,4 +28,5 @@ private:
     void handleMovement(GLFWwindow* window, float deltaTime);
     void handleActions(GLFWwindow* window);
     void updateCameraToHead();  // 每帧绑定摄像机到头骨
+    void updateCharacterFront();  // 根据yaw更新front向量
 };

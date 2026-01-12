@@ -39,8 +39,6 @@ void InputController::processKeyboardInput(GLFWwindow* window, float deltaTime) 
 }
 
 void InputController::processMouseInput(GLFWwindow* window) {
-    if (currentTarget_ != ControlTarget::Camera) return; // 鼠标只影响摄像机
-
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
@@ -59,7 +57,14 @@ void InputController::processMouseInput(GLFWwindow* window) {
     xoffset *= sensitivity_;
     yoffset *= sensitivity_;
 
-    controlledCamera_.processMouseMovement(xoffset, yoffset);
+    if (currentTarget_ == ControlTarget::Camera) {
+        // 摄像机模式：处理完整的鼠标移动（上下左右）
+        controlledCamera_.processMouseMovement(xoffset, yoffset);
+    }
+    else if (currentTarget_ == ControlTarget::Character && playController_) {
+        // 角色模式：只处理水平旋转（左右）
+        playController_->processMouseRotation(xoffset);
+    }
 }
 
 void InputController::processCameraInput(GLFWwindow* window, float deltaTime) {
