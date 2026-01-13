@@ -221,13 +221,40 @@ int main() {
     enemy2.speed = 0.05f;
     enemy2.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
 
-    
+    // h1敌人
+    glm::vec3 enemyStartPos_h1 = glm::vec3(1.87f, -0.23f, 1.06f);  // 起始位置
+
+    Enemy enemy_h1(playerModel.get(), &shader1,
+        enemyStartPos_h1,                    // 位置：玩家右侧前方（更容易看到）
+        glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
+        0.1f                             // 命中半径：0.5单位
+        );                            // 启用巡逻
+    enemy_h1.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+    enemy_h1.yaw = 30.0f;
+    enemy_h1.speed = 0.05f;
+    enemy_h1.SetAction(Character::Action::Idle, false);  // 初始状态设为行走
+
+    // h2敌人
+    glm::vec3 enemyStartPos_h2 = glm::vec3(1.87f, -0.23f, 1.06f);  // 起始位置
+
+    Enemy enemy_h2(playerModel.get(), &shader1,
+        enemyStartPos_h2,                    // 位置：玩家右侧前方（更容易看到）
+        glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
+        0.1f                             // 命中半径：0.5单位
+    );                            // 启用巡逻
+    enemy_h2.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+    enemy_h2.yaw = 180.0f;
+    enemy_h2.speed = 0.05f;
+    enemy_h2.SetAction(Character::Action::Idle, false);  // 初始状态设为行走
+
     // ============================
     // 创建战斗系统
     // ============================
     CombatSystem combatSystem(camera, 100.0f, true);  // 最大射击距离100，启用调试
     combatSystem.AddEnemy(&enemy1);  // 将敌人添加到战斗系统
     combatSystem.AddEnemy(&enemy2);
+    combatSystem.AddEnemy(&enemy_h1);
+    combatSystem.AddEnemy(&enemy_h2);
 
     // 加载静态模型（使用 Blinn-Phong shader）
     stbi_set_flip_vertically_on_load(false);
@@ -303,6 +330,10 @@ int main() {
 		enemy1.Draw(shader1);
         enemy2.Update(deltaTime);
         enemy2.Draw(shader1);
+        enemy_h1.Update(deltaTime);
+        enemy_h1.Draw(shader1);
+        enemy_h2.Update(deltaTime);
+        enemy_h2.Draw(shader1);
 		
 		// ============================
 		// 处理射击输入（战斗系统）

@@ -14,7 +14,7 @@
 class Character : public Object {
 public:
     // 动作枚举
-    enum class Action { Stay, Run, Attack , Death, Walk};
+    enum class Action { Stay, Run, Attack , Death, Walk, Idle};
 
 
 
@@ -38,6 +38,7 @@ public:
     { Action::Attack,"shooting" },
     { Action::Death, "death" },
 	{Action::Walk, "walk" },
+    {Action::Idle, "idleWgun"}
 	    };
 
         // 默认状态
