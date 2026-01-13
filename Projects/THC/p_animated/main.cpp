@@ -19,6 +19,7 @@
 
 
 #include <custom/shader_m.h>
+#include <custom/renderer.h>
 
 #include "custom/model_anim_data.h"
 #include "custom/animation.h"
@@ -107,28 +108,32 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // 设置点光源（使用Renderer::PointLight结构）
-    std::vector<Renderer::PointLight> pointLights = {
-        {glm::vec3(-0.19f, 0.11f, -0.38f), glm::vec3(1.0f, 1.0f, 1.0f), 0.4f, 1.0f, 0.09f, 0.032f},  // 光源1：白色
-        {glm::vec3(0.19f, 0.11f, -1.50f), glm::vec3(1.0f, 0.8f, 0.8f), 0.0f, 1.0f, 0.09f, 0.032f},  // 光源2：淡红色（关闭）
-        {glm::vec3(0.0f, 1.0f, -4.0f), glm::vec3(0.8f, 0.8f, 1.0f), 0.0f, 1.0f, 0.09f, 0.032f},      // 光源3：淡蓝色（关闭）
-        {glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.8f), 0.0f, 1.0f, 0.09f, 0.032f}       // 光源4：淡黄色（关闭）
-    };
+    std::vector<Renderer::PointLight> pointLights;
+    pointLights.push_back(Renderer::PointLight(
+        glm::vec3(-0.19f, 0.11f, -0.38f), glm::vec3(1.0f, 1.0f, 1.0f), 0.2f, 1.0f, 0.09f, 0.032f));  // 光源1：白色
+    pointLights.push_back(Renderer::PointLight(
+        glm::vec3(0.19f, 0.11f, -1.50f), glm::vec3(1.0f, 1.0f, 1.0f), 0.2f, 1.0f, 0.09f, 0.032f));  // 光源2：淡红色（关闭）
+    pointLights.push_back(Renderer::PointLight(
+        glm::vec3(1.60f, 0.07f, 1.41f), glm::vec3(1.0f, 1.0f, 1.0f), 0.5f, 1.0f, 0.09f, 0.032f));      // 光源3：淡蓝色（关闭）
+    pointLights.push_back(Renderer::PointLight(
+        glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.8f), 0.0f, 1.0f, 0.09f, 0.032f));      // 光源4：淡黄色（关闭）
+    
     float globalLightIntensity = 1.0f;  // 全局光强乘数（统一调整所有光源）
     
     // 材质设置
-    Renderer::Material groundMaterial = {
+    Renderer::Material groundMaterial(
         glm::vec3(0.2f, 0.2f, 0.2f),  // ambient
         glm::vec3(0.5f, 0.5f, 0.5f),  // specular
         32.0f,                         // shininess
         false                          // useTextureDiffuse1（地面使用material.texture_diffuse）
-    };
+    );
     
-    Renderer::Material modelMaterial = {
+    Renderer::Material modelMaterial(
         glm::vec3(0.3f, 0.3f, 0.3f),  // ambient
         glm::vec3(0.8f, 0.8f, 0.8f),  // specular
         64.0f,                         // shininess
         true                           // useTextureDiffuse1（模型使用texture_diffuse1）
-    };
+    );
 
     #pragma endregion
 
@@ -154,6 +159,7 @@ int main() {
     std::string glb6 = "fbx_toglb3.glb";
     std::string glb7 = "gltf_to_glb1.glb";
     std::string glb8 = rootURL + "resources/model/swimming_pool/swimming_pool_3d_scene.glb";
+    std::string glb_house = rootURL + "resources/model/warehouse/warehouse.glb";
     // 加载模型（骨骼）与动画（从同一 glb 文件读取）
     std::string glbPath = glb2;
 
@@ -182,12 +188,19 @@ int main() {
     auto enemyModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     // 敌人位置：在玩家旁边，更容易看到
     // 玩家位置是 (0.82f, 6.25f, -0.92f)，敌人放在玩家右侧前方
+    glm::vec3 enemyStartPos = glm::vec3(3.0f, 6.25f, -2.0f);  // 起始位置
+    glm::vec3 patrolPointA = glm::vec3(1.0f, 6.25f, -2.0f);   // 巡逻点 A（左侧）
+    glm::vec3 patrolPointB = glm::vec3(5.0f, 6.25f, -2.0f);   // 巡逻点 B（右侧）
+    
     Enemy enemy(playerModel.get(), &shader1, 
-                glm::vec3(3.0f, 6.25f, -2.0f),   // 位置：玩家右侧前方（更容易看到）
-                glm::vec3(0.0f,0.5f, 0.0f),    // 命中中心：在角色上方1单位（胸部/头部位置）
-                0.5f);                           // 命中半径：1.5单位（增大以便测试）
+                enemyStartPos,                    // 位置：玩家右侧前方（更容易看到）
+                glm::vec3(0.0f, 0.5f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
+                0.5f,                             // 命中半径：0.5单位
+                patrolPointA,                     // 巡逻点 A
+                patrolPointB,                      // 巡逻点 B
+                true);                            // 启用巡逻
     enemy.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
-    enemy.SetAction(Character::Action::Stay, false);
+    enemy.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
     
     // ============================
     // 创建战斗系统
@@ -202,6 +215,11 @@ int main() {
 	ModelTrans transmatStatic;
     transmatStatic.scale(glm::vec3(1.0f) * 0.07f);
 	transmatStatic.translate(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    auto modelHouse = std::make_shared <ModelStatic>(glb_house);
+    ModelTrans transnatHouse;
+    transnatHouse.scale(glm::vec3(1.0f) * 0.08f);
+    transnatHouse.translate(glm::vec3(20.0f, 0.0f,20.0f));
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
 
@@ -280,30 +298,13 @@ int main() {
 		Renderer::SetBlinnPhongLights(blinnPhongShader, pointLights, globalLightIntensity);
 
 		Renderer::Submit(blinnPhongShader, modelStatic.get(), transmatStatic.getModelMatrix());
-
+        Renderer::Submit(blinnPhongShader, modelHouse.get(), transnatHouse.getModelMatrix());
         Renderer::EndScene();
 
         // 显示UI（beginFrame已经在循环开始时调用了）
         iui.showFPS(1.4f);
         iui.showPos(camera.getPos(), 1.2f);
         
-        // 光源控制面板
-        ImGui::Begin("光源控制", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::Text("全局光强:");
-        ImGui::SliderFloat("全局强度", &globalLightIntensity, 0.0f, 5.0f, "%.2f");
-        ImGui::Separator();
-        ImGui::Text("各光源强度:");
-        int maxLights = static_cast<int>(std::min(pointLights.size(), size_t(4)));  // shader最多支持4个
-        for (int i = 0; i < maxLights; i++) {
-            std::string label = "光源 " + std::to_string(i + 1);
-            ImGui::SliderFloat(label.c_str(), &pointLights[i].intensity, 0.0f, 5.0f, "%.2f");
-        }
-        if (pointLights.size() > 4) {
-            ImGui::Text("(注意: shader最多支持4个光源，已显示前4个)");
-        }
-        ImGui::Separator();
-        ImGui::Text("提示: 鼠标在UI窗口上时不会控制摄像机");
-        ImGui::End();
         
         // iui.drawCrosshair();
         iui.endFrame();
