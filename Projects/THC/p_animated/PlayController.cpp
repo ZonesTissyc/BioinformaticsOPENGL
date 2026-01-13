@@ -26,6 +26,9 @@ void PlayController::handleMovement(GLFWwindow* window, float deltaTime)
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) direction.z -= 1.0f;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) direction.x += 1.0f;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) direction.x -= 1.0f;
+    // Z / X 控制角色在世界坐标系 Y 轴方向上升/下降
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) direction.y += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) direction.y -= 1.0f;
 
     if (glm::length(direction) > 0.0f) {
         direction = glm::normalize(direction);
@@ -43,8 +46,15 @@ void PlayController::handleMovement(GLFWwindow* window, float deltaTime)
         // 计算右方向（水平面内，垂直于前方向）
         glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
         
-        // 计算世界空间移动方向（W/S 控制前后，A/D 控制左右）
-        glm::vec3 moveDir = forward * direction.z + right * direction.x;
+        // 计算世界空间移动方向：
+        // - W/S 控制前后（沿角色前方向）
+        // - A/D 控制左右（沿角色右方向）
+        // - Z/X 控制上下（沿世界 Y 轴）
+        glm::vec3 upWorld = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 moveDir =
+            forward * direction.z +
+            right   * direction.x +
+            upWorld * direction.y;
         controlledCharacter_->position += moveDir * moveSpeed_ * deltaTime;
 
         // 切换到 Walk 动画（如果之前暂停了，会自动继续）

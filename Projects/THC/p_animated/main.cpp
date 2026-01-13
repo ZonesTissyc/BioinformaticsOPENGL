@@ -299,7 +299,7 @@ int main() {
         iui.beginFrame();
         iui.showFPS(1.4f);
         iui.showPos(camera.getPos(), 1.2f);
-        iui.drawCrosshair();
+        // iui.drawCrosshair();
         iui.endFrame();
         glDrawArrays(GL_TRIANGLES, 6, 36);
 
