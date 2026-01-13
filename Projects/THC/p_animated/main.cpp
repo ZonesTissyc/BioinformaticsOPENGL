@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 // 引入您项目中的自定义头文件
 #include <custom/InputController.h>
@@ -104,28 +106,29 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // 设置点光源（最多4个）
-    glm::vec3 lightPositions[] = {
-        glm::vec3(-0.19, 0.11f, -0.38f),
-        glm::vec3(0.19f, 0.11f,-1.50f),
-        glm::vec3(0.0f, 1.0f, -4.0f),
-        glm::vec3(0.0f, 5.0f, 0.0f)
-    };
-    glm::vec3 lightColors[] = {
-        glm::vec3(1.0f, 1.0f, 1.0f),  // 白色
-        glm::vec3(1.0f, 0.8f, 0.8f),  // 淡红色
-        glm::vec3(0.8f, 0.8f, 1.0f),  // 淡蓝色
-        glm::vec3(1.0f, 1.0f, 0.8f)   // 淡黄色
-    };
-    // 光源强度（可以单独设置每个光源，或使用统一值）
-    float lightIntensities[] = {
-        0.4f,  // 光源1强度
-        0.00f,  // 光源2强度
-        0.00f,  // 光源3强度（未使用）
-        0.00f   // 光源4强度（未使用）
+    // 设置点光源（使用Renderer::PointLight结构）
+    std::vector<Renderer::PointLight> pointLights = {
+        {glm::vec3(-0.19f, 0.11f, -0.38f), glm::vec3(1.0f, 1.0f, 1.0f), 0.4f, 1.0f, 0.09f, 0.032f},  // 光源1：白色
+        {glm::vec3(0.19f, 0.11f, -1.50f), glm::vec3(1.0f, 0.8f, 0.8f), 0.0f, 1.0f, 0.09f, 0.032f},  // 光源2：淡红色（关闭）
+        {glm::vec3(0.0f, 1.0f, -4.0f), glm::vec3(0.8f, 0.8f, 1.0f), 0.0f, 1.0f, 0.09f, 0.032f},      // 光源3：淡蓝色（关闭）
+        {glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.8f), 0.0f, 1.0f, 0.09f, 0.032f}       // 光源4：淡黄色（关闭）
     };
     float globalLightIntensity = 1.0f;  // 全局光强乘数（统一调整所有光源）
-    int numLights = 2;  // 使用2个光源
+    
+    // 材质设置
+    Renderer::Material groundMaterial = {
+        glm::vec3(0.2f, 0.2f, 0.2f),  // ambient
+        glm::vec3(0.5f, 0.5f, 0.5f),  // specular
+        32.0f,                         // shininess
+        false                          // useTextureDiffuse1（地面使用material.texture_diffuse）
+    };
+    
+    Renderer::Material modelMaterial = {
+        glm::vec3(0.3f, 0.3f, 0.3f),  // ambient
+        glm::vec3(0.8f, 0.8f, 0.8f),  // specular
+        64.0f,                         // shininess
+        true                           // useTextureDiffuse1（模型使用texture_diffuse1）
+    };
 
     #pragma endregion
 
@@ -239,31 +242,9 @@ int main() {
         blinnPhongShader.setMat4("model", modelmat);
         blinnPhongShader.setVec3("viewPos", camera.getPos());
 
-        // 设置材质属性
-        blinnPhongShader.setInt("material.texture_diffuse", 0);
-        blinnPhongShader.setVec3("material.ambient", 0.2f, 0.2f, 0.2f);
-        blinnPhongShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-        blinnPhongShader.setFloat("material.shininess", 32.0f);
-        // 地面使用 material.texture_diffuse，不使用 texture_diffuse1
-        blinnPhongShader.setBool("hasTextureDiffuse1", false);
-        // 设置地面材质颜色和emission默认值
-        blinnPhongShader.setVec4("materialColor", 1.0f, 1.0f, 1.0f, 1.0f);
-        blinnPhongShader.setBool("hasTexture", false);  // 地面有纹理，但通过material.texture_diffuse使用
-        blinnPhongShader.setVec3("emissiveColor", 0.0f, 0.0f, 0.0f);  // 地面无自发光
-        blinnPhongShader.setBool("hasEmissiveMap", false);
-
-        // 设置点光源
-        blinnPhongShader.setInt("numLights", numLights);
-        for (int i = 0; i < numLights; i++) {
-            std::string prefix = "pointLights[" + std::to_string(i) + "]";
-            blinnPhongShader.setVec3(prefix + ".position", lightPositions[i]);
-            blinnPhongShader.setVec3(prefix + ".color", lightColors[i]);
-            // 使用单独的光强值乘以全局光强乘数
-            blinnPhongShader.setFloat(prefix + ".intensity", lightIntensities[i] * globalLightIntensity);
-            blinnPhongShader.setFloat(prefix + ".constant", 1.0f);
-            blinnPhongShader.setFloat(prefix + ".linear", 0.09f);
-            blinnPhongShader.setFloat(prefix + ".quadratic", 0.032f);
-        }
+        // 使用Renderer设置材质和光源
+        Renderer::SetBlinnPhongMaterial(blinnPhongShader, groundMaterial);
+        Renderer::SetBlinnPhongLights(blinnPhongShader, pointLights, globalLightIntensity);
 
         // 绑定地面纹理
         glActiveTexture(GL_TEXTURE0);
@@ -294,26 +275,9 @@ int main() {
 		blinnPhongShader.setMat4("view", viewMat);
 		blinnPhongShader.setVec3("viewPos", camera.getPos());
 
-		// 设置材质属性（静态模型使用默认材质，模型会通过 mesh 提供 texture_diffuse1）
-		blinnPhongShader.setInt("material.texture_diffuse", 0);  // 备用，不会被使用
-		blinnPhongShader.setVec3("material.ambient", 0.3f, 0.3f, 0.3f);
-		blinnPhongShader.setVec3("material.specular", 0.8f, 0.8f, 0.8f);
-		blinnPhongShader.setFloat("material.shininess", 64.0f);
-		// 告诉 shader 使用 texture_diffuse1（mesh 会自动绑定）
-		blinnPhongShader.setBool("hasTextureDiffuse1", true);
-
-		// 设置点光源（与地面相同）
-		blinnPhongShader.setInt("numLights", numLights);
-		for (int i = 0; i < numLights; i++) {
-			std::string prefix = "pointLights[" + std::to_string(i) + "]";
-			blinnPhongShader.setVec3(prefix + ".position", lightPositions[i]);
-			blinnPhongShader.setVec3(prefix + ".color", lightColors[i]);
-			// 使用单独的光强值乘以全局光强乘数
-			blinnPhongShader.setFloat(prefix + ".intensity", lightIntensities[i] * globalLightIntensity);
-			blinnPhongShader.setFloat(prefix + ".constant", 1.0f);
-			blinnPhongShader.setFloat(prefix + ".linear", 0.09f);
-			blinnPhongShader.setFloat(prefix + ".quadratic", 0.032f);
-		}
+		// 使用Renderer设置材质和光源
+		Renderer::SetBlinnPhongMaterialForModel(blinnPhongShader, modelMaterial);
+		Renderer::SetBlinnPhongLights(blinnPhongShader, pointLights, globalLightIntensity);
 
 		Renderer::Submit(blinnPhongShader, modelStatic.get(), transmatStatic.getModelMatrix());
 
@@ -323,6 +287,23 @@ int main() {
         iui.showFPS(1.4f);
         iui.showPos(camera.getPos(), 1.2f);
         
+        // 光源控制面板
+        ImGui::Begin("光源控制", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Text("全局光强:");
+        ImGui::SliderFloat("全局强度", &globalLightIntensity, 0.0f, 5.0f, "%.2f");
+        ImGui::Separator();
+        ImGui::Text("各光源强度:");
+        int maxLights = static_cast<int>(std::min(pointLights.size(), size_t(4)));  // shader最多支持4个
+        for (int i = 0; i < maxLights; i++) {
+            std::string label = "光源 " + std::to_string(i + 1);
+            ImGui::SliderFloat(label.c_str(), &pointLights[i].intensity, 0.0f, 5.0f, "%.2f");
+        }
+        if (pointLights.size() > 4) {
+            ImGui::Text("(注意: shader最多支持4个光源，已显示前4个)");
+        }
+        ImGui::Separator();
+        ImGui::Text("提示: 鼠标在UI窗口上时不会控制摄像机");
+        ImGui::End();
         
         // iui.drawCrosshair();
         iui.endFrame();

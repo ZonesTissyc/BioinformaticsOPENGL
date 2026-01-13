@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <memory>
+#include <string>
+#include <algorithm>
 #include <glm/glm.hpp>
 
 #include <custom/shader.h>
@@ -11,6 +13,24 @@
 
 class Renderer {
 public:
+    // 点光源结构体
+    struct PointLight {
+        glm::vec3 position;
+        glm::vec3 color;
+        float intensity;
+        float constant;
+        float linear;
+        float quadratic;
+    };
+
+    // 材质结构体（用于Blinn-Phong光照）
+    struct Material {
+        glm::vec3 ambient;
+        glm::vec3 specular;
+        float shininess;
+        bool useTextureDiffuse1;  // 是否使用texture_diffuse1（模型）还是material.texture_diffuse（地面）
+    };
+
     // 场景数据缓存结构
     struct SceneData {
         glm::vec3 viewPos;
@@ -52,6 +72,53 @@ public:
 
     static void EndScene() {
         // 可以在这里做一些清理工作
+    }
+
+    // 设置Blinn-Phong光照的点光源
+    static void SetBlinnPhongLights(Shader& shader, 
+                                     const std::vector<PointLight>& lights,
+                                     float globalIntensity = 1.0f) {
+        shader.use();
+        int numLights = static_cast<int>(std::min(lights.size(), size_t(4)));  // shader最多支持4个光源
+        shader.setInt("numLights", numLights);
+        
+        for (int i = 0; i < numLights; i++) {
+            std::string prefix = "pointLights[" + std::to_string(i) + "]";
+            shader.setVec3(prefix + ".position", lights[i].position);
+            shader.setVec3(prefix + ".color", lights[i].color);
+            shader.setFloat(prefix + ".intensity", lights[i].intensity * globalIntensity);
+            shader.setFloat(prefix + ".constant", lights[i].constant);
+            shader.setFloat(prefix + ".linear", lights[i].linear);
+            shader.setFloat(prefix + ".quadratic", lights[i].quadratic);
+        }
+    }
+
+    // 设置Blinn-Phong光照的材质（用于地面）
+    static void SetBlinnPhongMaterial(Shader& shader, const Material& material) {
+        shader.use();
+        shader.setInt("material.texture_diffuse", 0);
+        shader.setVec3("material.ambient", material.ambient);
+        shader.setVec3("material.specular", material.specular);
+        shader.setFloat("material.shininess", material.shininess);
+        shader.setBool("hasTextureDiffuse1", material.useTextureDiffuse1);
+        
+        // 设置默认值（地面使用）
+        if (!material.useTextureDiffuse1) {
+            shader.setVec4("materialColor", 1.0f, 1.0f, 1.0f, 1.0f);
+            shader.setBool("hasTexture", false);
+            shader.setVec3("emissiveColor", 0.0f, 0.0f, 0.0f);
+            shader.setBool("hasEmissiveMap", false);
+        }
+    }
+
+    // 设置Blinn-Phong光照的材质（用于模型，mesh会自动设置texture_diffuse1等）
+    static void SetBlinnPhongMaterialForModel(Shader& shader, const Material& material) {
+        shader.use();
+        shader.setInt("material.texture_diffuse", 0);  // 备用
+        shader.setVec3("material.ambient", material.ambient);
+        shader.setVec3("material.specular", material.specular);
+        shader.setFloat("material.shininess", material.shininess);
+        shader.setBool("hasTextureDiffuse1", true);  // 模型使用texture_diffuse1
     }
 
     // 提交绘制命令
