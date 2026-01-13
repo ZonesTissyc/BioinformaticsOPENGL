@@ -102,6 +102,11 @@ public:
             {
                 m_Animator->Resume();
             }
+            // 如果切换到非Walk动作，确保取消暂停状态（重要：修复Attack动画无法播放的问题）
+            else if (newAction != Action::Walk && m_Animator && m_Animator->IsPaused())
+            {
+                m_Animator->Resume();
+            }
             PlayAnimation(it->second, once);
         }
     }
