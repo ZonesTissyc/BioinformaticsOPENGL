@@ -15,6 +15,12 @@ public:
     
     // 处理鼠标输入（用于控制角色转向）
     void processMouseInput(float xoffset, float yoffset, float sensitivity = 0.1f);
+    
+    // 设置移动速度
+    void setMoveSpeed(float speed) { moveSpeed_ = speed; }
+    
+    // 获取当前移动速度
+    float getMoveSpeed() const { return moveSpeed_; }
 
 private:
     Character* controlledCharacter_ = nullptr;
