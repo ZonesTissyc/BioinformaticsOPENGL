@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\Iui">
+      <UniqueIdentifier>{1391ab0f-20eb-40b5-9e21-0c4425e96c77}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\glad.c">
@@ -33,26 +36,29 @@
     <ClCompile Include="..\..\..\src\custom\Projection.cpp">
       <Filter>头文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\imgui\imgui.cpp">
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayController.cpp">
       <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\imgui\imgui.cpp">
+      <Filter>头文件\Iui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\imgui\imgui_draw.cpp">
-      <Filter>头文件</Filter>
+      <Filter>头文件\Iui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\imgui\imgui_impl_glfw.cpp">
-      <Filter>头文件</Filter>
+      <Filter>头文件\Iui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\imgui\imgui_impl_opengl3.cpp">
-      <Filter>头文件</Filter>
+      <Filter>头文件\Iui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\imgui\imgui_tables.cpp">
-      <Filter>头文件</Filter>
+      <Filter>头文件\Iui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\imgui\imgui_widgets.cpp">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="main2.cpp">
-      <Filter>源文件</Filter>
+      <Filter>头文件\Iui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

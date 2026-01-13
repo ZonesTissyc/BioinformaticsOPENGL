@@ -143,7 +143,7 @@
     <ClCompile Include="..\..\..\src\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\..\..\src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\..\src\stb_image.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main2.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

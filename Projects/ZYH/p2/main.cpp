@@ -98,7 +98,7 @@ int main() {
     if (!glfwInit()) {
         std::cout << "glfwInit is fail!" << std::endl;
     }
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "GED", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Model_test", nullptr, nullptr);
     glfwSetWindowPos(window, 1000, 150); // 调整窗口的位置
 #pragma endregion 返回window指针
 
@@ -184,18 +184,18 @@ int main() {
 #pragma endregion 
 
 #pragma region VAO段渲染
-        glUseProgram(shaderProgram); // 指定要使用的着色器程序
+        glUseProgram(shaderProgram); 
 
-       // glm::mat4 model = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+        //glm::mat4 model = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
         modeltrans.reset();
-        //modeltrans.translate(glm::vec3(0.5f, 1.0f, 0.0f));
-       // modeltrans.scale(glm::vec3(0.5f, 0.5f, 0.5f));
+       // modeltrans.translate(glm::vec3(0.5f, 1.0f, 0.0f));
+      // modeltrans.scale(glm::vec3(0.5f, 0.5f, 0.5f));
        //modeltrans.rotate(45.0f, glm::vec3(0.5f, 1.0f, 1.0f));
-        modeltrans.rotateAroundPoint(glm::vec3(1.0f, 0.5f, 0.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f),glm::vec3(1.0f,1.0f,1.0f));
+        //modeltrans.rotateAroundPoint(glm::vec3(1.0f, 0.5f, 0.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f),glm::vec3(1.0f,1.0f,1.0f));
        
-        float angle = (float)glfwGetTime() * 180.0f; // 角度随时间变化
-        modeltrans.rotateAroundPoint(glm::vec3(1.0f, 0.0f, 0.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f),glm::vec3( 1.0f, 1.0f, 1.0f));
-        glm::mat4 model = modeltrans.getModelMatrix();
+       float angle = (float)glfwGetTime() * 180.0f; // 角度随时间变化
+      modeltrans.rotateAroundPoint(glm::vec3(1.0f, 0.0f, 0.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f),glm::vec3( 1.0f, 1.0f, 1.0f));
+      glm::mat4 model = modeltrans.getModelMatrix();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清除颜色缓、深度缓冲
         glBindVertexArray(VAO);     // 指定绑定的VAO

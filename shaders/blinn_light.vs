@@ -5,18 +5,18 @@ layout (location = 2) in vec2 aTexCoords;
 
 out vec2 TexCoords;
 out vec3 vNormal;
-out vec3 FragPos; //顶点位置
-out vec3 vViewDir;//视线方向
-out vec3 vLightDir;//光源的方向
+out vec3 FragPos; 
+out vec3 vViewDir;
+out vec3 vLightDir;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform vec3 uLightPos;//光源的位置
+uniform vec3 uLightPos;
 
 void main()
 {
-    TexCoords = aTexCoords;  //纹理坐标  
+    TexCoords = aTexCoords;   
     // 顶点变换到观察空间
     FragPos = vec3(model * vec4(aPos, 1.0)); 
 
