@@ -83,13 +83,25 @@ public:
     void SetAction(Action newAction, bool once = false)
     {
         if (action == newAction)
+        {
+            // 如果是切换到 Walk 且当前已经是 Walk，则继续播放（如果之前暂停了）
+            if (newAction == Action::Walk && m_Animator && m_Animator->IsPaused())
+            {
+                m_Animator->Resume();
+            }
             return; // 状态未变，不重复播放
+        }
 
         action = newAction;
 
         auto it = m_ActionToAnim.find(action);
         if (it != m_ActionToAnim.end())
         {
+            // 如果切换到Walk，确保取消暂停状态
+            if (newAction == Action::Walk && m_Animator)
+            {
+                m_Animator->Resume();
+            }
             PlayAnimation(it->second, once);
         }
     }
@@ -109,6 +121,25 @@ public:
             once ? Animator::AnimationPlayMode::Once
             : Animator::AnimationPlayMode::Loop
         );
+    }
+    
+    // ============================
+    // 暂停/继续 Walk 动画
+    // ============================
+    void PauseWalkAnimation()
+    {
+        if (action == Action::Walk && m_Animator)
+        {
+            m_Animator->Pause();
+        }
+    }
+    
+    void ResumeWalkAnimation()
+    {
+        if (action == Action::Walk && m_Animator)
+        {
+            m_Animator->Resume();
+        }
     }
 
     // ============================

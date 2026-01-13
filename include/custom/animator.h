@@ -45,6 +45,16 @@ public:
         if (!m_CurrentAnimation || m_Finished)
             return;
 
+        // 如果暂停，只计算骨骼变换（保持当前帧），不推进时间
+        if (m_Paused)
+        {
+            CalculateBoneTransform(
+                &m_CurrentAnimation->GetRootNode(),
+                glm::mat4(1.0f)
+            );
+            return;
+        }
+
         m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
 
         float duration = m_CurrentAnimation->GetDuration();
@@ -87,6 +97,13 @@ public:
     }
 
     bool IsFinished() const { return m_Finished; }
+    
+    // ============================
+    // 暂停/继续动画
+    // ============================
+    void Pause() { m_Paused = true; }
+    void Resume() { m_Paused = false; }
+    bool IsPaused() const { return m_Paused; }
 
     // ============================
     // 关键：骨骼递归
@@ -164,4 +181,5 @@ private:
 
     AnimationPlayMode m_PlayMode{ AnimationPlayMode::Loop };
     bool m_Finished{ false };
+    bool m_Paused{ false };  // 暂停标志
 };
