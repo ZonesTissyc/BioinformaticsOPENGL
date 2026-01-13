@@ -24,6 +24,9 @@ private:
     // 偏移，让摄像机高于头部一点
     glm::vec3 cameraOffset_ = glm::vec3(0.00f, 0.006f, 0.0120f);
 
+    // 鼠标左键上一帧的状态（用于检测按下瞬间）
+    bool leftMousePressedLast_ = false;
+
     // 内部方法
     void handleMovement(GLFWwindow* window, float deltaTime);
     void handleActions(GLFWwindow* window);
