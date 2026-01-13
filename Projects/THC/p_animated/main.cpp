@@ -188,10 +188,10 @@ int main() {
     auto enemyModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     // 敌人位置：在玩家旁边，更容易看到
     // 玩家位置是 (0.82f, 6.25f, -0.92f)，敌人放在玩家右侧前方
-    Enemy enemy(enemyModel.get(), &shader1, 
+    Enemy enemy(playerModel.get(), &shader1, 
                 glm::vec3(3.0f, 6.25f, -2.0f),   // 位置：玩家右侧前方（更容易看到）
-                glm::vec3(0.0f, 1.0f, 0.0f),    // 命中中心：在角色上方1单位（胸部/头部位置）
-                1.5f);                           // 命中半径：1.5单位（增大以便测试）
+                glm::vec3(0.0f,0.5f, 0.0f),    // 命中中心：在角色上方1单位（胸部/头部位置）
+                0.5f);                           // 命中半径：1.5单位（增大以便测试）
     enemy.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
     enemy.SetAction(Character::Action::Stay, false);
     
