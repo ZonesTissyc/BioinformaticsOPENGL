@@ -168,7 +168,7 @@ int main() {
     auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
-    Character player2(playerModel.get(), &shader1, glm::vec3(0.82f, 6.25f, -0.92f));
+    Character player2(playerModel.get(), &shader1, glm::vec3(0.0f, 0.0f, 0.0f));
     
     // 正确设置 player2 的缩放大小（Character::Draw() 会使用这个 scale）
     player2.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
@@ -209,8 +209,8 @@ int main() {
 	auto modelStatic = std::make_shared<ModelStatic>(glbStatic);
 	Shader shaderStatic(shaderStaticVS.c_str(), shaderStaticFS.c_str());
 	ModelTrans transmatStatic;
-    transmatStatic.scale(glm::vec3(1.0f) * 0.3f);
-	transmatStatic.translate(glm::vec3(0.0f, 19.0f, 0.0f));
+    transmatStatic.scale(glm::vec3(1.0f) * 0.07f);
+	transmatStatic.translate(glm::vec3(0.0f, 0.0f, 0.0f));
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
 

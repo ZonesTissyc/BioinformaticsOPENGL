@@ -62,7 +62,8 @@ void InputController::processMouseInput(GLFWwindow* window) {
     }
     else if (currentTarget_ == ControlTarget::Character && playController_) {
         // 将鼠标输入传递给 PlayController，由其控制角色转向
-        playController_->processMouseInput(xoffset, yoffset, sensitivity_);
+        // 反转 xoffset 以修正鼠标转动方向
+        playController_->processMouseInput(-xoffset, yoffset, sensitivity_);
     }
 }
 
