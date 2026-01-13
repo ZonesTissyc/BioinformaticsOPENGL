@@ -2,6 +2,7 @@
 #include <games/character.h>
 #include <games/PlayController.h>
 #include <glm/glm.hpp>
+#include <imgui.h>  // 用于检查ImGui是否想要捕获鼠标
 
 InputController::InputController(Camera& camera, float speed, float sensitivity)
     : controlledCamera_(camera), cameraSpeed_(speed), sensitivity_(sensitivity) {
@@ -39,6 +40,18 @@ void InputController::processKeyboardInput(GLFWwindow* window, float deltaTime) 
 }
 
 void InputController::processMouseInput(GLFWwindow* window) {
+    // 检查ImGui是否想要捕获鼠标事件（例如鼠标在ImGui窗口上）
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureMouse) {
+        // ImGui想要捕获鼠标，不处理摄像机控制
+        // 更新lastX和lastY以避免鼠标移动跳跃
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        lastX_ = static_cast<float>(xpos);
+        lastY_ = static_cast<float>(ypos);
+        return;
+    }
+
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
@@ -62,7 +75,8 @@ void InputController::processMouseInput(GLFWwindow* window) {
     }
     else if (currentTarget_ == ControlTarget::Character && playController_) {
         // 将鼠标输入传递给 PlayController，由其控制角色转向
-        playController_->processMouseInput(xoffset, yoffset, sensitivity_);
+        // 反转 xoffset 以修正鼠标转动方向
+        playController_->processMouseInput(-xoffset, yoffset, sensitivity_);
     }
 }
 

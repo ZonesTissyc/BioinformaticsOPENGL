@@ -188,7 +188,7 @@ public:
 
 public:
     Action action;
-    float speed{ 2.5f };
+    float speed{ 0.005f };
     bool alive{ true };
     float yaw{ -90.0f };  // 水平旋转角度（度），初始朝向 -Z 方向
 

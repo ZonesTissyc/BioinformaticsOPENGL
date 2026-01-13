@@ -1,0 +1,13 @@
+{
+    "version" : "1.0",
+    "description" : "废弃场地",
+    "files" : [
+        {
+            "typename" : "glb",
+            "filename" : "warehouse.glb",
+            "url" : "https://alist.ztcdream.com/d/local/opengl/model/abandoned_warehouse_-_interior_scene.glb?sign=dpbh95jGCKiLqpTbgVRKY-Vlb-TzPaGmAyNBDQzfVjA=:0",
+            "unzip" : false,
+            "from" : "n"
+        }
+    ]
+}
