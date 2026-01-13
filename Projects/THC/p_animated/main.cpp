@@ -55,86 +55,69 @@ int main() {
 
     // 4. 编译着色器
     // ------------------------------------
-    // 注意：路径取决于您的 exe 运行位置。通常在 IDE 中运行时，相对路径是相对于项目文件或解决方案文件的。
-    // 这里假设从 Projects/THC/p_sky1/ 运行，需要回溯到根目录找到 shaders 文件夹。
     std::string shaderDir = "../../../shaders/";
 
-    // 使用现有的 colors shader 渲染地面
-    Shader colorShader((shaderDir + "1.colors/1.colors.vs").c_str(), (shaderDir + "1.colors/1.colors.fs").c_str());
-    // 使用现有的 light_cube shader 渲染光源立方体
-    Shader lightShader((shaderDir + "1.colors/1.light_cube.vs").c_str(), (shaderDir + "1.colors/1.light_cube.fs").c_str());
+    // 使用 Blinn-Phong shader 渲染地面和静态模型
+    Shader blinnPhongShader((shaderDir + "Blinn_phong.vs").c_str(), (shaderDir + "Blinn_phong.fs").c_str());
 
-    // 5. 设置顶点数据 (地面平面 + 光源立方体)
+    // 5. 设置地面顶点数据 (包含位置、法线、纹理坐标)
     // ------------------------------------------------------------------
-    float vertices[] = {
-        // --- 地面平面 (6个顶点) ---
-        // 位置 (x, y, z)            
-         25.0f, -0.5f,  25.0f,
-        -25.0f, -0.5f,  25.0f,
-        -25.0f, -0.5f, -25.0f,
+    // 地面法线向上 (0, 1, 0)
+    float groundVertices[] = {
+        // 位置 (x, y, z)    法线 (nx, ny, nz)    纹理坐标 (u, v)
+         25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+        -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  0.0f, 1.0f,
+        -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
 
-         25.0f, -0.5f,  25.0f,
-        -25.0f, -0.5f, -25.0f,
-         25.0f, -0.5f, -25.0f,
-
-         // --- 立方体 (用于显示光源位置, 36个顶点) ---
-         -0.5f, -0.5f, -0.5f,
-          0.5f, -0.5f, -0.5f,
-          0.5f,  0.5f, -0.5f,
-          0.5f,  0.5f, -0.5f,
-         -0.5f,  0.5f, -0.5f,
-         -0.5f, -0.5f, -0.5f,
-
-         -0.5f, -0.5f,  0.5f,
-          0.5f, -0.5f,  0.5f,
-          0.5f,  0.5f,  0.5f,
-          0.5f,  0.5f,  0.5f,
-         -0.5f,  0.5f,  0.5f,
-         -0.5f, -0.5f,  0.5f,
-
-         -0.5f,  0.5f,  0.5f,
-         -0.5f,  0.5f, -0.5f,
-         -0.5f, -0.5f, -0.5f,
-         -0.5f, -0.5f, -0.5f,
-         -0.5f, -0.5f,  0.5f,
-         -0.5f,  0.5f,  0.5f,
-
-          0.5f,  0.5f,  0.5f,
-          0.5f,  0.5f, -0.5f,
-          0.5f, -0.5f, -0.5f,
-          0.5f, -0.5f, -0.5f,
-          0.5f, -0.5f,  0.5f,
-          0.5f,  0.5f,  0.5f,
-
-         -0.5f, -0.5f, -0.5f,
-          0.5f, -0.5f, -0.5f,
-          0.5f, -0.5f,  0.5f,
-          0.5f, -0.5f,  0.5f,
-         -0.5f, -0.5f,  0.5f,
-         -0.5f, -0.5f, -0.5f,
-
-         -0.5f,  0.5f, -0.5f,
-          0.5f,  0.5f, -0.5f,
-          0.5f,  0.5f,  0.5f,
-          0.5f,  0.5f,  0.5f,
-         -0.5f,  0.5f,  0.5f,
-         -0.5f,  0.5f, -0.5f
+         25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+        -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+         25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f
     };
 
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    unsigned int groundVBO, groundVAO;
+    glGenVertexArrays(1, &groundVAO);
+    glGenBuffers(1, &groundVBO);
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindVertexArray(groundVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(groundVertices), groundVertices, GL_STATIC_DRAW);
 
     // 属性 0: 位置 (vec3)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    // 属性 1: 法线 (vec3)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // 属性 2: 纹理坐标 (vec2)
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
-    // 光源位置
-    glm::vec3 lightPos(44.2f, 1.0f, 2.0f);
+    // 创建简单的白色纹理用于地面
+    unsigned int groundTexture;
+    glGenTextures(1, &groundTexture);
+    glBindTexture(GL_TEXTURE_2D, groundTexture);
+    // 创建一个 1x1 的白色纹理
+    unsigned char whiteData[] = { 255, 255, 255, 255 };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whiteData);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // 设置点光源（最多4个）
+    glm::vec3 lightPositions[] = {
+        glm::vec3(4.2f, 1.0f, 2.0f),
+        glm::vec3(-4.2f, 1.0f, 2.0f),
+        glm::vec3(0.0f, 1.0f, -4.0f),
+        glm::vec3(0.0f, 5.0f, 0.0f)
+    };
+    glm::vec3 lightColors[] = {
+        glm::vec3(1.0f, 1.0f, 1.0f),  // 白色
+        glm::vec3(1.0f, 0.8f, 0.8f),  // 淡红色
+        glm::vec3(0.8f, 0.8f, 1.0f),  // 淡蓝色
+        glm::vec3(1.0f, 1.0f, 0.8f)   // 淡黄色
+    };
+    int numLights = 2;  // 使用2个光源
 
     #pragma endregion
 
@@ -201,13 +184,10 @@ int main() {
     CombatSystem combatSystem(camera, 100.0f, true);  // 最大射击距离100，启用调试
     combatSystem.AddEnemy(&enemy);  // 将敌人添加到战斗系统
 
-    // 加载静态模型
+    // 加载静态模型（使用 Blinn-Phong shader）
     stbi_set_flip_vertically_on_load(false);
-	std::string shaderStaticVS = rootURL + "shaders/model_light.vs";
-	std::string shaderStaticFS = rootURL + "shaders/model_light.fs";
     std::string glbStatic = glb8;
 	auto modelStatic = std::make_shared<ModelStatic>(glbStatic);
-	Shader shaderStatic(shaderStaticVS.c_str(), shaderStaticFS.c_str());
 	ModelTrans transmatStatic;
     transmatStatic.scale(glm::vec3(1.0f) * 0.07f);
 	transmatStatic.translate(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -231,8 +211,8 @@ int main() {
         controller.processMouseInput(window.get());
 
         // 渲染设置
-        // 设置清屏颜色 (天空颜色: 天蓝色)
-        glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
+        // 设置清屏颜色 (深色背景，更好地展示光照效果)
+        glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // 获取矩阵
@@ -240,31 +220,39 @@ int main() {
         glm::mat4 viewMat = camera.getView();
         glm::mat4 modelmat = glm::mat4(1.0f);
 
-        // --- 1. 绘制地面 ---
-        colorShader.use(); 
-        colorShader.setMat4("projection", projMat);
-        colorShader.setMat4("view", viewMat);
+        // --- 1. 绘制地面 (使用 Blinn-Phong 光照) ---
+        blinnPhongShader.use();
+        blinnPhongShader.setMat4("projection", projMat);
+        blinnPhongShader.setMat4("view", viewMat);
+        blinnPhongShader.setMat4("model", modelmat);
+        blinnPhongShader.setVec3("viewPos", camera.getPos());
 
-        modelmat = glm::mat4(1.0f);
-        colorShader.setMat4("model", modelmat);
+        // 设置材质属性
+        blinnPhongShader.setInt("material.texture_diffuse", 0);
+        blinnPhongShader.setVec3("material.ambient", 0.2f, 0.2f, 0.2f);
+        blinnPhongShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        blinnPhongShader.setFloat("material.shininess", 32.0f);
+        // 地面使用 material.texture_diffuse，不使用 texture_diffuse1
+        blinnPhongShader.setBool("hasTextureDiffuse1", false);
 
-        // 设置颜色：地面为深灰色，光照为白色
-        colorShader.setVec3("objectColor", 0.3f, 0.3f, 0.3f);
-        colorShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        // 设置点光源
+        blinnPhongShader.setInt("numLights", numLights);
+        for (int i = 0; i < numLights; i++) {
+            std::string prefix = "pointLights[" + std::to_string(i) + "]";
+            blinnPhongShader.setVec3(prefix + ".position", lightPositions[i]);
+            blinnPhongShader.setVec3(prefix + ".color", lightColors[i]);
+            blinnPhongShader.setFloat(prefix + ".intensity", 1.0f);
+            blinnPhongShader.setFloat(prefix + ".constant", 1.0f);
+            blinnPhongShader.setFloat(prefix + ".linear", 0.09f);
+            blinnPhongShader.setFloat(prefix + ".quadratic", 0.032f);
+        }
 
-        glBindVertexArray(VAO);
-        // 绘制前6个顶点 (地面)
+        // 绑定地面纹理
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, groundTexture);
+
+        glBindVertexArray(groundVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        // --- 2. 绘制光源 (小立方体) ---
-        lightShader.use();
-        lightShader.setMat4("projection", projMat);
-        lightShader.setMat4("view", viewMat);
-
-        modelmat = glm::mat4(1.0f);
-        modelmat = glm::translate(modelmat, lightPos);
-        modelmat = glm::scale(modelmat, glm::vec3(0.2f)); // 缩小立方体
-        lightShader.setMat4("model", modelmat);
 
         
         // 绘制模型
@@ -282,16 +270,33 @@ int main() {
 		combatSystem.ProcessShootInput(window.get());
 		
 
-		// 绘制静态模型 - 需要单独设置 shaderStatic 的 uniform
-		shaderStatic.use();
-		shaderStatic.setMat4("projection", projMat);
-		shaderStatic.setMat4("view", viewMat);
-		shaderStatic.setVec3("viewPos", camera.getPos());
-		shaderStatic.setVec3("lightPos", lightPos);
-		shaderStatic.setVec4("materialColor", 1.0f, 1.0f, 1.0f, 1.0f);
-		shaderStatic.setBool("hasTexture", true);
-        // shaderStatic.setMat4("model", transmatStatic.getModelMatrix());
-		Renderer::Submit(shaderStatic, modelStatic.get(), transmatStatic.getModelMatrix());
+		// 绘制静态模型 (使用 Blinn-Phong 光照)
+		blinnPhongShader.use();
+		blinnPhongShader.setMat4("projection", projMat);
+		blinnPhongShader.setMat4("view", viewMat);
+		blinnPhongShader.setVec3("viewPos", camera.getPos());
+
+		// 设置材质属性（静态模型使用默认材质，模型会通过 mesh 提供 texture_diffuse1）
+		blinnPhongShader.setInt("material.texture_diffuse", 0);  // 备用，不会被使用
+		blinnPhongShader.setVec3("material.ambient", 0.3f, 0.3f, 0.3f);
+		blinnPhongShader.setVec3("material.specular", 0.8f, 0.8f, 0.8f);
+		blinnPhongShader.setFloat("material.shininess", 64.0f);
+		// 告诉 shader 使用 texture_diffuse1（mesh 会自动绑定）
+		blinnPhongShader.setBool("hasTextureDiffuse1", true);
+
+		// 设置点光源（与地面相同）
+		blinnPhongShader.setInt("numLights", numLights);
+		for (int i = 0; i < numLights; i++) {
+			std::string prefix = "pointLights[" + std::to_string(i) + "]";
+			blinnPhongShader.setVec3(prefix + ".position", lightPositions[i]);
+			blinnPhongShader.setVec3(prefix + ".color", lightColors[i]);
+			blinnPhongShader.setFloat(prefix + ".intensity", 1.0f);
+			blinnPhongShader.setFloat(prefix + ".constant", 1.0f);
+			blinnPhongShader.setFloat(prefix + ".linear", 0.09f);
+			blinnPhongShader.setFloat(prefix + ".quadratic", 0.032f);
+		}
+
+		Renderer::Submit(blinnPhongShader, modelStatic.get(), transmatStatic.getModelMatrix());
 
         Renderer::EndScene();
 
@@ -301,7 +306,6 @@ int main() {
         iui.showPos(camera.getPos(), 1.2f);
         // iui.drawCrosshair();
         iui.endFrame();
-        glDrawArrays(GL_TRIANGLES, 6, 36);
 
         // 交换缓冲区
         window.swapBuffers();
