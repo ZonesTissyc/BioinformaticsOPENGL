@@ -185,29 +185,49 @@ int main() {
     // ============================
     // 创建敌人对象（用于测试）
     // ============================
-    auto enemyModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
+    // auto enemyModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     // 敌人位置：在玩家旁边，更容易看到
     // 玩家位置是 (0.82f, 6.25f, -0.92f)，敌人放在玩家右侧前方
-    glm::vec3 enemyStartPos = glm::vec3(-0.31f, 0.00f, -0.39f);  // 起始位置
-    glm::vec3 patrolPointA = glm::vec3(-0.31f, 0.00f, -0.39f);   // 巡逻点 A（左侧）
-    glm::vec3 patrolPointB = glm::vec3(-0.28f, 0.00f, -1.14f);   // 巡逻点 B（右侧）
+    glm::vec3 enemyStartPos = glm::vec3(-0.31f, -0.05f, -0.39f);  // 起始位置
+    glm::vec3 patrolPointA = glm::vec3(-0.31f, -0.05f, -0.39f);   // 巡逻点 A（左侧）
+    glm::vec3 patrolPointB = glm::vec3(-0.28f, -0.05f, -1.14f);   // 巡逻点 B（右侧）
     
-    Enemy enemy(playerModel.get(), &shader1, 
+    Enemy enemy1(playerModel.get(), &shader1, 
                 enemyStartPos,                    // 位置：玩家右侧前方（更容易看到）
                 glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
-                0.01f,                             // 命中半径：0.5单位
+                0.1f,                             // 命中半径：0.5单位
                 patrolPointA,                     // 巡逻点 A
                 patrolPointB,                      // 巡逻点 B
                 true);                            // 启用巡逻
-    enemy.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
-    enemy.yaw = 90.0f;
-    enemy.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
+    enemy1.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+    enemy1.yaw = 0.0f;
+    enemy1.speed = 0.05f;
+    enemy1.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
+
+    // 2号敌人
+    glm::vec3 enemyStartPos2 = glm::vec3(0.29f, -0.05f, -0.50f);  // 起始位置
+    glm::vec3 patrolPointA2 = glm::vec3(0.29f, -0.05f, -0.43f);   // 巡逻点 A（左侧）
+    glm::vec3 patrolPointB2 = glm::vec3(0.29f, -0.05f, -1.16f);   // 巡逻点 B（右侧）
+
+    Enemy enemy2(playerModel.get(), &shader1,
+        enemyStartPos2,                    // 位置：玩家右侧前方（更容易看到）
+        glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
+        0.1f,                             // 命中半径：0.5单位
+        patrolPointA2,                     // 巡逻点 A
+        patrolPointB2,                      // 巡逻点 B
+        true);                            // 启用巡逻
+    enemy2.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+    enemy2.yaw = 0.0f;
+    enemy2.speed = 0.05f;
+    enemy2.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
+
     
     // ============================
     // 创建战斗系统
     // ============================
     CombatSystem combatSystem(camera, 100.0f, true);  // 最大射击距离100，启用调试
-    combatSystem.AddEnemy(&enemy);  // 将敌人添加到战斗系统
+    combatSystem.AddEnemy(&enemy1);  // 将敌人添加到战斗系统
+    combatSystem.AddEnemy(&enemy2);
 
     // 加载静态模型（使用 Blinn-Phong shader）
     stbi_set_flip_vertically_on_load(false);
@@ -279,8 +299,10 @@ int main() {
 		player2.Draw(shader1);  // Character::Draw() 内部会设置正确的 model 矩阵（包含 scale）
 		
 		// 更新并绘制敌人
-		enemy.Update(deltaTime);
-		enemy.Draw(shader1);
+		enemy1.Update(deltaTime);
+		enemy1.Draw(shader1);
+        enemy2.Update(deltaTime);
+        enemy2.Draw(shader1);
 		
 		// ============================
 		// 处理射击输入（战斗系统）
