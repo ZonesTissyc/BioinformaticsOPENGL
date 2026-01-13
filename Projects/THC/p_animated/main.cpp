@@ -188,18 +188,19 @@ int main() {
     auto enemyModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     // 敌人位置：在玩家旁边，更容易看到
     // 玩家位置是 (0.82f, 6.25f, -0.92f)，敌人放在玩家右侧前方
-    glm::vec3 enemyStartPos = glm::vec3(3.0f, 6.25f, -2.0f);  // 起始位置
-    glm::vec3 patrolPointA = glm::vec3(1.0f, 6.25f, -2.0f);   // 巡逻点 A（左侧）
-    glm::vec3 patrolPointB = glm::vec3(5.0f, 6.25f, -2.0f);   // 巡逻点 B（右侧）
+    glm::vec3 enemyStartPos = glm::vec3(-0.31f, 0.00f, -0.39f);  // 起始位置
+    glm::vec3 patrolPointA = glm::vec3(-0.31f, 0.00f, -0.39f);   // 巡逻点 A（左侧）
+    glm::vec3 patrolPointB = glm::vec3(-0.28f, 0.00f, -1.14f);   // 巡逻点 B（右侧）
     
     Enemy enemy(playerModel.get(), &shader1, 
                 enemyStartPos,                    // 位置：玩家右侧前方（更容易看到）
-                glm::vec3(0.0f, 0.5f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
-                0.5f,                             // 命中半径：0.5单位
+                glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
+                0.01f,                             // 命中半径：0.5单位
                 patrolPointA,                     // 巡逻点 A
                 patrolPointB,                      // 巡逻点 B
                 true);                            // 启用巡逻
     enemy.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+    enemy.yaw = 90.0f;
     enemy.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
     
     // ============================

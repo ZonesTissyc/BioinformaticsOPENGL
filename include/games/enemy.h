@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <games/character.h>
 #include <glm/glm.hpp>
@@ -26,7 +26,7 @@ public:
           patrolPointB_(patrolPointB),
           enablePatrol_(enablePatrol),
           movingToB_(true),  // 默认先向 B 点移动
-          arrivalDistance_(0.5f)  // 到达判定距离
+          arrivalDistance_(0.01f)  // 到达判定距离
     {
         // 如果启用巡逻但未设置巡逻点，使用当前位置作为默认点
         if (enablePatrol_)
@@ -274,12 +274,21 @@ private:
         // 根据速度移动
         position += direction * speed * deltaTime;
         
-        // 更新朝向（使用 atan2 计算角度）
-        // atan2(x, z) 返回从 Z 轴正方向到 (x, z) 的角度（弧度）
-        yaw = glm::degrees(atan2(direction.x, direction.z));
+        // 更新朝向（需要考虑 Draw() 中的 +90 度偏移）
+        // Draw() 中使用 yaw + 90.0f 旋转模型，所以这里需要反向计算
+        // 实际模型朝向 = atan2(direction.x, direction.z)
+        // yaw = 实际模型朝向 - 90度
+        float actualYaw = glm::degrees(atan2(direction.x, direction.z));
+        yaw = actualYaw - 90.0f;  // 减去 90 度以补偿 Draw() 中的偏移
         
         // 更新 front 向量（与 Character 的 front 保持一致）
-        front = direction;
+        // 使用与 ProcessMouseRotation 相同的逻辑
+        float adjustedYaw = yaw + 90.0f;  // 与 Draw() 中的旋转保持一致
+        glm::vec3 newFront;
+        newFront.x = cos(glm::radians(adjustedYaw));
+        newFront.y = 0.0f;
+        newFront.z = sin(glm::radians(adjustedYaw));
+        front = glm::normalize(newFront);
         
         // 设置行走动画
         SetAction(Action::Walk, false);
