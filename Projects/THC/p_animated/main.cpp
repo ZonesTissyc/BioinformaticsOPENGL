@@ -106,8 +106,8 @@ int main() {
 
     // 设置点光源（最多4个）
     glm::vec3 lightPositions[] = {
-        glm::vec3(4.2f, 1.0f, 2.0f),
-        glm::vec3(-4.2f, 1.0f, 2.0f),
+        glm::vec3(-0.19, 0.11f, -0.38f),
+        glm::vec3(0.19f, 0.11f,-1.50f),
         glm::vec3(0.0f, 1.0f, -4.0f),
         glm::vec3(0.0f, 5.0f, 0.0f)
     };
@@ -117,6 +117,14 @@ int main() {
         glm::vec3(0.8f, 0.8f, 1.0f),  // 淡蓝色
         glm::vec3(1.0f, 1.0f, 0.8f)   // 淡黄色
     };
+    // 光源强度（可以单独设置每个光源，或使用统一值）
+    float lightIntensities[] = {
+        0.4f,  // 光源1强度
+        0.00f,  // 光源2强度
+        0.00f,  // 光源3强度（未使用）
+        0.00f   // 光源4强度（未使用）
+    };
+    float globalLightIntensity = 1.0f;  // 全局光强乘数（统一调整所有光源）
     int numLights = 2;  // 使用2个光源
 
     #pragma endregion
@@ -206,7 +214,11 @@ int main() {
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         dt = timer.tick();
-        // 处理输入
+        
+        // 先更新ImGui（这样ImGui的IO状态会在处理鼠标输入时可用）
+        iui.beginFrame();
+        
+        // 处理输入（鼠标输入会检查ImGui是否想要捕获鼠标）
         controller.processKeyboardInput(window.get(), dt);
         controller.processMouseInput(window.get());
 
@@ -234,6 +246,11 @@ int main() {
         blinnPhongShader.setFloat("material.shininess", 32.0f);
         // 地面使用 material.texture_diffuse，不使用 texture_diffuse1
         blinnPhongShader.setBool("hasTextureDiffuse1", false);
+        // 设置地面材质颜色和emission默认值
+        blinnPhongShader.setVec4("materialColor", 1.0f, 1.0f, 1.0f, 1.0f);
+        blinnPhongShader.setBool("hasTexture", false);  // 地面有纹理，但通过material.texture_diffuse使用
+        blinnPhongShader.setVec3("emissiveColor", 0.0f, 0.0f, 0.0f);  // 地面无自发光
+        blinnPhongShader.setBool("hasEmissiveMap", false);
 
         // 设置点光源
         blinnPhongShader.setInt("numLights", numLights);
@@ -241,7 +258,8 @@ int main() {
             std::string prefix = "pointLights[" + std::to_string(i) + "]";
             blinnPhongShader.setVec3(prefix + ".position", lightPositions[i]);
             blinnPhongShader.setVec3(prefix + ".color", lightColors[i]);
-            blinnPhongShader.setFloat(prefix + ".intensity", 1.0f);
+            // 使用单独的光强值乘以全局光强乘数
+            blinnPhongShader.setFloat(prefix + ".intensity", lightIntensities[i] * globalLightIntensity);
             blinnPhongShader.setFloat(prefix + ".constant", 1.0f);
             blinnPhongShader.setFloat(prefix + ".linear", 0.09f);
             blinnPhongShader.setFloat(prefix + ".quadratic", 0.032f);
@@ -290,7 +308,8 @@ int main() {
 			std::string prefix = "pointLights[" + std::to_string(i) + "]";
 			blinnPhongShader.setVec3(prefix + ".position", lightPositions[i]);
 			blinnPhongShader.setVec3(prefix + ".color", lightColors[i]);
-			blinnPhongShader.setFloat(prefix + ".intensity", 1.0f);
+			// 使用单独的光强值乘以全局光强乘数
+			blinnPhongShader.setFloat(prefix + ".intensity", lightIntensities[i] * globalLightIntensity);
 			blinnPhongShader.setFloat(prefix + ".constant", 1.0f);
 			blinnPhongShader.setFloat(prefix + ".linear", 0.09f);
 			blinnPhongShader.setFloat(prefix + ".quadratic", 0.032f);
@@ -300,10 +319,11 @@ int main() {
 
         Renderer::EndScene();
 
-
-        iui.beginFrame();
+        // 显示UI（beginFrame已经在循环开始时调用了）
         iui.showFPS(1.4f);
         iui.showPos(camera.getPos(), 1.2f);
+        
+        
         // iui.drawCrosshair();
         iui.endFrame();
 

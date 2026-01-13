@@ -18,6 +18,15 @@ uniform Material material;
 uniform sampler2D texture_diffuse1;  // 第一个漫反射纹理（用于模型）
 uniform bool hasTextureDiffuse1;    // 是否使用 texture_diffuse1
 
+// 材质颜色调制（mesh 会设置这个）
+uniform vec4 materialColor;         // 材质颜色（RGBA），用于调制纹理
+uniform bool hasTexture;            // 是否有纹理（mesh 会设置）
+
+// Emission（自发光）
+uniform vec3 emissiveColor;         // 自发光颜色
+uniform bool hasEmissiveMap;        // 是否有自发光纹理
+uniform sampler2D texture_emissive1; // 自发光纹理
+
 // 点光源结构体
 struct PointLight {
     vec3 position;
@@ -33,12 +42,31 @@ uniform PointLight pointLights[4];  // 最多4个点光源
 uniform int numLights;              // 实际使用的光源数量
 uniform vec3 viewPos;
 
-// 获取纹理颜色（兼容两种纹理命名方式）
+// 获取纹理颜色（兼容两种纹理命名方式，并应用materialColor调制）
 vec3 getTextureColor(vec2 texCoords) {
+    vec3 texColor;
     if (hasTextureDiffuse1) {
-        return texture(texture_diffuse1, texCoords).rgb;
+        // 使用 texture_diffuse1（模型使用）
+        if (hasTexture) {
+            // 有纹理：采样纹理并应用materialColor调制
+            texColor = texture(texture_diffuse1, texCoords).rgb * materialColor.rgb;
+        } else {
+            // 没有纹理：直接使用materialColor
+            texColor = materialColor.rgb;
+        }
     } else {
-        return texture(material.texture_diffuse, texCoords).rgb;
+        // 使用 material.texture_diffuse（地面使用）
+        texColor = texture(material.texture_diffuse, texCoords).rgb;
+    }
+    return texColor;
+}
+
+// 获取自发光颜色
+vec3 getEmissionColor(vec2 texCoords) {
+    if (hasEmissiveMap) {
+        return texture(texture_emissive1, texCoords).rgb;
+    } else {
+        return emissiveColor;
     }
 }
 
@@ -75,8 +103,19 @@ void main() {
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
     
+    // 获取基础颜色（包含纹理和materialColor调制）
+    vec3 texColor = getTextureColor(TexCoords);
+    
+    // Alpha测试（如果alpha太低则丢弃片段）
+    float alpha = materialColor.a;
+    if (hasTextureDiffuse1 && hasTexture) {
+        alpha = texture(texture_diffuse1, TexCoords).a * materialColor.a;
+    }
+    if (alpha < 0.1) {
+        discard;
+    }
+    
     // 环境光（结合纹理颜色）
-    vec3 texColor = getTextureColor(TexCoords);  // 采样纹理颜色
     vec3 ambient = material.ambient * texColor;  // 环境光 = 材质环境光系数 * 纹理颜色
     
     // 初始化结果
@@ -87,6 +126,10 @@ void main() {
         result += calcPointLight(pointLights[i], norm, FragPos, viewDir, TexCoords);
     }
     
-    // 输出最终颜色
-    FragColor = vec4(result, 1.0);
+    // 添加自发光（Emission）
+    vec3 emission = getEmissionColor(TexCoords);
+    result += emission;
+    
+    // 输出最终颜色（保留alpha）
+    FragColor = vec4(result, alpha);
 }
