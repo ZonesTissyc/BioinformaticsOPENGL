@@ -1,0 +1,140 @@
+﻿#include <games/PlayController.h>
+#include <games/character.h>
+#include <custom/Camera.h>
+#include <glm/gtc/matrix_transform.hpp>
+
+PlayController::PlayController(Character* character, Camera& camera, float moveSpeed)
+    : controlledCharacter_(character), controlledCamera_(camera), moveSpeed_(moveSpeed)
+{
+}
+
+void PlayController::processInput(GLFWwindow* window, float deltaTime)
+{
+    if (!controlledCharacter_ || !controlledCharacter_->alive)
+        return;
+
+    handleMovement(window, deltaTime);
+    handleActions(window);
+    updateCameraToHead(); // 每帧同步摄像机
+}
+
+void PlayController::handleMovement(GLFWwindow* window, float deltaTime)
+{
+    glm::vec3 direction(0.0f);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) direction.z += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) direction.z -= 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) direction.x += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) direction.x -= 1.0f;
+    // Z / X 控制角色在世界坐标系 Y 轴方向上升/下降
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) direction.y += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) direction.y -= 1.0f;
+
+    if (glm::length(direction) > 0.0f) {
+        direction = glm::normalize(direction);
+        
+        // 使用角色的 front 方向作为前进方向（水平方向，不受头骨倾斜影响）
+        glm::vec3 forward = controlledCharacter_->front;
+        float forwardLen = glm::length(forward);
+        if (forwardLen < 1e-4f) {
+            // 如果 front 无效，使用默认方向
+            forward = glm::vec3(0.0f, 0.0f, -1.0f);
+        } else {
+            forward = glm::normalize(forward);
+        }
+        
+        // 计算右方向（水平面内，垂直于前方向）
+        glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+        
+        // 计算世界空间移动方向：
+        // - W/S 控制前后（沿角色前方向）
+        // - A/D 控制左右（沿角色右方向）
+        // - Z/X 控制上下（沿世界 Y 轴）
+        glm::vec3 upWorld = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 moveDir =
+            forward * direction.z +
+            right   * direction.x +
+            upWorld * direction.y;
+        controlledCharacter_->position += moveDir * moveSpeed_ * deltaTime;
+
+        // 切换到 Walk 动画（如果之前暂停了，会自动继续）
+        controlledCharacter_->SetAction(Character::Action::Walk);
+    }
+    else {
+        // 松开W键时，暂停Walk动画（保持在当前帧），不切换回Stay
+        if (controlledCharacter_->action == Character::Action::Walk)
+        {
+            controlledCharacter_->PauseWalkAnimation();
+        }
+        else
+        {
+            // 如果当前不是Walk状态，切换到Stay
+            controlledCharacter_->SetAction(Character::Action::Stay);
+        }
+    }
+}
+
+void PlayController::handleActions(GLFWwindow* window)
+{
+    // 处理鼠标左键：按下时播放 Attack 动画（once 模式）
+    bool leftMousePressedNow = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+    if (leftMousePressedNow && !leftMousePressedLast_)
+    {
+        // 检测到鼠标左键从释放到按下的瞬间，播放 Attack 动画
+        controlledCharacter_->SetAction(Character::Action::Attack, true);
+    }
+    leftMousePressedLast_ = leftMousePressedNow;
+
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        controlledCharacter_->SetAction(Character::Action::Attack, true);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+        controlledCharacter_->SetAction(Character::Action::Death, true);
+        // controlledCharacter_->alive = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
+        controlledCharacter_->SetAction(Character::Action::Stay, true);
+        // controlledCharacter_->alive = false;
+    }
+}
+
+void PlayController::processMouseInput(float xoffset, float yoffset, float sensitivity)
+{
+    if (!controlledCharacter_ || !controlledCharacter_->alive)
+        return;
+    
+    controlledCharacter_->ProcessMouseRotation(xoffset, yoffset, sensitivity);
+}
+
+void PlayController::updateCameraToHead()
+{
+    if (!controlledCharacter_) return;
+
+    // 使用 Character 内部的头骨信息
+    glm::vec3 headPos = controlledCharacter_->headPosition;
+    glm::vec3 headForward = controlledCharacter_->headForward;
+
+    // 检查头方向是否有效（长度不能太小）
+    float headForwardLen = glm::length(headForward);
+    if (headForwardLen < 1e-4f)
+        return;
+    
+    headForward = glm::normalize(headForward);
+
+    // 期望：摄像机始终在头骨“后面一点”，并朝向头骨前方
+    // cameraOffset_.z 用作“往后拉多远”（第三人称距离，正值表示离角色更远）
+    // cameraOffset_.y 用作“抬高多少”
+    float backDist = cameraOffset_.z;
+    float upOffset = cameraOffset_.y;
+
+    glm::vec3 camPos =
+        headPos
+        + headForward * backDist          // 往头骨反方向（后方）拉开距离
+        + glm::vec3(0.0f, upOffset, 0.0f) // 稍微抬高一点
+		+ glm::vec3(cameraOffset_.x, 0.0f, 0.0f); // 侧偏一点，避免遮挡角色
+
+    controlledCamera_.setPos(camPos);
+    controlledCamera_.setFront(headForward);  // 始终朝向头骨前方
+}

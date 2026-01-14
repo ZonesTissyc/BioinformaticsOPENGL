@@ -14,7 +14,7 @@
 class Character : public Object {
 public:
     // 动作枚举
-    enum class Action { Stay, Run, Attack , Death, Walk};
+    enum class Action { Stay, Run, Attack , Death, Walk, Idle};
 
 
 
@@ -38,6 +38,7 @@ public:
     { Action::Attack,"shooting" },
     { Action::Death, "death" },
 	{Action::Walk, "walk" },
+    {Action::Idle, "idleWgun"}
 	    };
 
         // 默认状态
@@ -99,6 +100,11 @@ public:
         {
             // 如果切换到Walk，确保取消暂停状态
             if (newAction == Action::Walk && m_Animator)
+            {
+                m_Animator->Resume();
+            }
+            // 如果切换到非Walk动作，确保取消暂停状态（重要：修复Attack动画无法播放的问题）
+            else if (newAction != Action::Walk && m_Animator && m_Animator->IsPaused())
             {
                 m_Animator->Resume();
             }

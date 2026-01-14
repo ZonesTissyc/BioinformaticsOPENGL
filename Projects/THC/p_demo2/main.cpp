@@ -168,16 +168,16 @@ int main() {
     auto modelAnimated = std::make_shared<ModelAnimated>(modelData, std::shared_ptr<Animation>(animation));
 
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
-    Character player2(playerModel.get(), &shader1, glm::vec3(0.0f, 0.0f, 0.0f));
+    Character player2(playerModel.get(), &shader1, glm::vec3(-0.02f, -0.05f, -0.10f));
     
     // 正确设置 player2 的缩放大小（Character::Draw() 会使用这个 scale）
     player2.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
-    
+    player2.yaw = -270.0f;
     player2.SetAction(Character::Action::Stay, false);
     controller.setCharacter(&player2);
 	// 创建 PlayController，第三个参数是移动速度（单位：单位/秒）
 	// 默认值是 2.5f，可以根据需要调整（例如：1.0f 更慢，5.0f 更快）
-	PlayController playController(&player2, camera, 0.55f);
+	PlayController playController(&player2, camera, 0.15f);
 
 	controller.setPlayController(&playController);
 	controller.setCharacter(&player2);
@@ -221,40 +221,13 @@ int main() {
     enemy2.speed = 0.05f;
     enemy2.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
 
-    // h1敌人
-    glm::vec3 enemyStartPos_h1 = glm::vec3(1.87f, -0.23f, 1.06f);  // 起始位置
-
-    Enemy enemy_h1(playerModel.get(), &shader1,
-        enemyStartPos_h1,                    // 位置：玩家右侧前方（更容易看到）
-        glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
-        0.1f                             // 命中半径：0.5单位
-        );                            // 启用巡逻
-    enemy_h1.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
-    enemy_h1.yaw = 30.0f;
-    enemy_h1.speed = 0.05f;
-    enemy_h1.SetAction(Character::Action::Idle, false);  // 初始状态设为行走
-
-    // h2敌人
-    glm::vec3 enemyStartPos_h2 = glm::vec3(1.87f, -0.23f, 1.06f);  // 起始位置
-
-    Enemy enemy_h2(playerModel.get(), &shader1,
-        enemyStartPos_h2,                    // 位置：玩家右侧前方（更容易看到）
-        glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
-        0.1f                             // 命中半径：0.5单位
-    );                            // 启用巡逻
-    enemy_h2.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
-    enemy_h2.yaw = 180.0f;
-    enemy_h2.speed = 0.05f;
-    enemy_h2.SetAction(Character::Action::Idle, false);  // 初始状态设为行走
-
+    
     // ============================
     // 创建战斗系统
     // ============================
     CombatSystem combatSystem(camera, 100.0f, true);  // 最大射击距离100，启用调试
     combatSystem.AddEnemy(&enemy1);  // 将敌人添加到战斗系统
     combatSystem.AddEnemy(&enemy2);
-    combatSystem.AddEnemy(&enemy_h1);
-    combatSystem.AddEnemy(&enemy_h2);
 
     // 加载静态模型（使用 Blinn-Phong shader）
     stbi_set_flip_vertically_on_load(false);
@@ -275,6 +248,19 @@ int main() {
     Timer timer;
     float dt = 0.0f;
     int timeforani = 0;
+    
+    // ============================
+    // 敌人全部死亡检测和传送相关变量
+    // ============================
+    float allEnemiesDeadTime = -1.0f;  // 记录所有敌人死亡的时间，-1表示未全部死亡
+    const float TELEPORT_DELAY = 3.0f;  // 传送延迟时间（秒）
+    const glm::vec3 TELEPORT_POSITION = glm::vec3(0.85f, -0.24f, 1.06f);  // 传送目标坐标
+    
+    // 检查所有敌人是否死亡的函数
+    auto CheckAllEnemiesDead = [&enemy1, &enemy2]() -> bool {
+        return enemy1.IsDead() && enemy2.IsDead();
+    };
+    
     // 6. 渲染循环
     // ------------------------------------------------------------------
     while (window.noClose()) {
@@ -330,16 +316,34 @@ int main() {
 		enemy1.Draw(shader1);
         enemy2.Update(deltaTime);
         enemy2.Draw(shader1);
-        enemy_h1.Update(deltaTime);
-        enemy_h1.Draw(shader1);
-        enemy_h2.Update(deltaTime);
-        enemy_h2.Draw(shader1);
 		
 		// ============================
 		// 处理射击输入（战斗系统）
 		// ============================
 		combatSystem.ProcessShootInput(window.get());
 		
+		// ============================
+		// 检查所有敌人是否死亡，并在2秒后传送玩家
+		// ============================
+		if (CheckAllEnemiesDead()) {
+			// 如果所有敌人都死亡了
+			if (allEnemiesDeadTime < 0.0f) {
+				// 第一次检测到全部死亡，记录当前时间
+				allEnemiesDeadTime = currentFrame;
+			} else {
+				// 已经记录过死亡时间，检查是否过了2秒
+				float elapsedTime = currentFrame - allEnemiesDeadTime;
+				if (elapsedTime >= TELEPORT_DELAY) {
+					// 2秒后传送玩家到指定坐标
+					player2.position = TELEPORT_POSITION;
+					// 可选：重置死亡时间标记，避免重复传送
+					// allEnemiesDeadTime = -1.0f;  // 如果只需要传送一次，取消注释
+				}
+			}
+		} else {
+			// 如果有敌人还活着，重置死亡时间标记
+			allEnemiesDeadTime = -1.0f;
+		}
 
 		// 绘制静态模型 (使用 Blinn-Phong 光照)
 		blinnPhongShader.use();
@@ -358,7 +362,7 @@ int main() {
         // 显示UI（beginFrame已经在循环开始时调用了）
         iui.showFPS(1.4f);
         iui.showPos(camera.getPos(), 1.2f);
-        
+        iui.drawCrosshair();
         
         // iui.drawCrosshair();
         iui.endFrame();
