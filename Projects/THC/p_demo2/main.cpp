@@ -246,6 +246,14 @@ int main() {
     ModelTrans transnatHouse;
     transnatHouse.scale(glm::vec3(1.0f) * 0.08f);
     transnatHouse.translate(glm::vec3(20.0f, 0.0f,20.0f));
+
+    // 加载赛马娘
+    std::string glb_mambo = rootURL + "resources/model/mambo/mambo.glb";
+    auto modelManmbo = std::make_shared <ModelStatic>(glb_mambo);
+    ModelTrans transmatMambo;
+    transmatMambo.scale(glm::vec3(1.0f) *0.05f);
+    transmatMambo.rotate(90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    transmatMambo.translate(glm::vec3(1.87f, -0.22f, 1.06f));
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
 
@@ -364,6 +372,7 @@ int main() {
 
 		Renderer::Submit(blinnPhongShader, modelStatic.get(), transmatStatic.getModelMatrix());
         Renderer::Submit(blinnPhongShader, modelHouse.get(), transnatHouse.getModelMatrix());
+        Renderer::Submit(shader1, modelManmbo.get(), transmatMambo.getModelMatrix());
         Renderer::EndScene();
 
         // 显示UI
