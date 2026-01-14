@@ -38,11 +38,9 @@ public:
         }
     }
 
-    // ============================
     // 命中检测相关方法
-    // ============================
     
-    // 获取命中中心点（世界空间）
+    // 获取命中中心点（世界空间坐标系）
     glm::vec3 GetHitCenter() const
     {
         // 命中中心 = 角色位置 + 相对偏移
@@ -55,7 +53,7 @@ public:
         return hitRadius_;
     }
     
-    // 设置命中中心点（相对位置）
+    // 设置命中中心点
     void SetHitCenter(glm::vec3 hitCenter)
     {
         hitCenter_ = hitCenter;
@@ -67,14 +65,9 @@ public:
         hitRadius_ = radius;
     }
     
-    // ============================
+
     // 射线命中检测
-    // ============================
-    // 检测射线是否命中敌人（使用球体碰撞检测）
-    // rayOrigin: 射线起点（世界空间）
-    // rayDirection: 射线方向（已归一化）
-    // maxDistance: 射线最大距离（可选，用于限制检测范围）
-    // 返回：是否命中，如果命中，outHitPoint 返回命中点位置
+
     bool CheckRayHit(const glm::vec3& rayOrigin, const glm::vec3& rayDirection,
                      glm::vec3& outHitPoint, float maxDistance = 1000.0f) const
     {
@@ -112,7 +105,7 @@ public:
         return false;
     }
     
-    // 简化版本：只返回是否命中，不返回命中点
+    // 只返回是否命中，不返回命中点
     bool CheckRayHit(const glm::vec3& rayOrigin, const glm::vec3& rayDirection,
                      float maxDistance = 1000.0f) const
     {
@@ -120,10 +113,7 @@ public:
         return CheckRayHit(rayOrigin, rayDirection, dummyHitPoint, maxDistance);
     }
     
-    // ============================
-    // 点命中检测（用于子弹等）
-    // ============================
-    // 检测一个点是否在命中范围内
+    // 点命中检测
     bool CheckPointHit(const glm::vec3& point) const
     {
         glm::vec3 center = GetHitCenter();
@@ -131,11 +121,10 @@ public:
         return distance <= hitRadius_;
     }
     
-    // ============================
-    // 命中处理（触发死亡）
-    // ============================
+
+    // 命中处理
     // 当敌人被命中时调用此方法，会触发死亡并播放 Death 动画
-    // 返回：是否成功触发死亡（如果已经死亡则返回 false）
+    // 返回：是否成功触发死亡
     bool OnHit()
     {
         // 如果已经死亡，不再处理
@@ -146,23 +135,19 @@ public:
         isDead_ = true;
         alive = false;
         
-        // 播放 Death 动画（Once 模式，播放一次）
+        // 播放 Death 动画
         SetAction(Action::Death, true);
         
         return true;
     }
     
-    // ============================
     // 状态查询
-    // ============================
     bool IsDead() const
     {
         return isDead_ || !alive;
     }
     
-    // ============================
     // 带死亡检测的命中方法
-    // ============================
     // 检测射线命中，如果命中则自动触发死亡
     bool CheckRayHitAndKill(const glm::vec3& rayOrigin, const glm::vec3& rayDirection,
                             glm::vec3& outHitPoint, float maxDistance = 1000.0f)
@@ -192,9 +177,7 @@ public:
         return false;
     }
 
-    // ============================
     // 巡逻相关方法
-    // ============================
     
     // 重写 Update 方法，添加巡逻逻辑
     void Update(float deltaTime)
@@ -274,12 +257,9 @@ private:
         // 根据速度移动
         position += direction * speed * deltaTime;
         
-        // 更新朝向（需要考虑 Draw() 中的 +90 度偏移）
-        // Draw() 中使用 yaw + 90.0f 旋转模型，所以这里需要反向计算
-        // 实际模型朝向 = atan2(direction.x, direction.z)
-        // yaw = 实际模型朝向 - 90度
+        // 更新朝向
         float actualYaw = glm::degrees(atan2(direction.x, direction.z));
-        yaw = actualYaw - 90.0f;  // 减去 90 度以补偿 Draw() 中的偏移
+        yaw = actualYaw - 90.0f; 
         
         // 更新 front 向量（与 Character 的 front 保持一致）
         // 使用与 ProcessMouseRotation 相同的逻辑

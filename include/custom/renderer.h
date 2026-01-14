@@ -25,22 +25,21 @@ public:
         // 默认构造函数
         PointLight() : position(0.0f), color(1.0f), intensity(1.0f), constant(1.0f), linear(0.09f), quadratic(0.032f) {}
         
-        // 带参数的构造函数
         PointLight(const glm::vec3& pos, const glm::vec3& col, float intens, float c, float l, float q)
             : position(pos), color(col), intensity(intens), constant(c), linear(l), quadratic(q) {}
     };
 
-    // 材质结构体（用于Blinn-Phong光照）
+    // 材质结构体
     struct Material {
         glm::vec3 ambient;
         glm::vec3 specular;
         float shininess;
-        bool useTextureDiffuse1;  // 是否使用texture_diffuse1（模型）还是material.texture_diffuse（地面）
+        bool useTextureDiffuse1;  
         
         // 默认构造函数
         Material() : ambient(0.0f), specular(0.0f), shininess(32.0f), useTextureDiffuse1(false) {}
         
-        // 带参数的构造函数
+        // 带参构造函数
         Material(const glm::vec3& amb, const glm::vec3& spec, float shin, bool useTex)
             : ambient(amb), specular(spec), shininess(shin), useTextureDiffuse1(useTex) {}
     };
