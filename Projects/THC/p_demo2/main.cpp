@@ -221,6 +221,28 @@ int main() {
     enemy2.speed = 0.05f;
     enemy2.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
 
+    // h敌人
+    std::vector <Enemy> enemy_h;
+    std::vector <glm::vec3> enemySatrtHpos(4);
+    enemySatrtHpos[0] = glm::vec3(1.87f, -0.22f, 1.06f);
+    enemySatrtHpos[1] = glm::vec3(2.02f, -0.22f, 1.27f);
+    enemySatrtHpos[2] = glm::vec3(1.70f, -0.22f, 1.27f);
+    enemySatrtHpos[3] = glm::vec3(2.15f, -0.22f, 1.03f);
+    std::vector <float> enemyHyaws(4);
+    enemyHyaws[0] = 23.0f;
+    enemyHyaws[1] = 130.0f;
+    enemyHyaws[2] = -38.0f;
+    enemyHyaws[3] = -187.0f;
+    for (int i = 0; i < 4;i++) {
+        enemy_h.emplace_back(playerModel.get(), &shader1,
+            enemySatrtHpos[i],                    // 位置：玩家右侧前方（更容易看到）
+            glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
+            0.1f);
+        enemy_h[i].setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+        enemy_h[i].yaw = enemyHyaws[i];
+        enemy_h[i].SetAction(Character::Action::Idle, false);
+    }
+
     
     // ============================
     // 创建战斗系统
@@ -254,7 +276,8 @@ int main() {
     // ============================
     float allEnemiesDeadTime = -1.0f;  // 记录所有敌人死亡的时间，-1表示未全部死亡
     const float TELEPORT_DELAY = 3.0f;  // 传送延迟时间（秒）
-    const glm::vec3 TELEPORT_POSITION = glm::vec3(0.85f, -0.24f, 1.06f);  // 传送目标坐标
+    const glm::vec3 teleport_pos = glm::vec3(1.30f, -0.24f, 0.97f);  // 传送目标坐标
+    bool have_teleported = false;
     
     // 检查所有敌人是否死亡的函数
     auto CheckAllEnemiesDead = [&enemy1, &enemy2]() -> bool {
@@ -316,7 +339,10 @@ int main() {
 		enemy1.Draw(shader1);
         enemy2.Update(deltaTime);
         enemy2.Draw(shader1);
-		
+        for (int i = 0; i < enemy_h.size(); i++) {
+            enemy_h[i].Update(deltaTime);
+            enemy_h[i].Draw(shader1);
+        }
 		// ============================
 		// 处理射击输入（战斗系统）
 		// ============================
@@ -325,8 +351,7 @@ int main() {
 		// ============================
 		// 检查所有敌人是否死亡，并在2秒后传送玩家
 		// ============================
-		if (CheckAllEnemiesDead()) {
-			// 如果所有敌人都死亡了
+		if (CheckAllEnemiesDead() && !have_teleported) {
 			if (allEnemiesDeadTime < 0.0f) {
 				// 第一次检测到全部死亡，记录当前时间
 				allEnemiesDeadTime = currentFrame;
@@ -335,7 +360,11 @@ int main() {
 				float elapsedTime = currentFrame - allEnemiesDeadTime;
 				if (elapsedTime >= TELEPORT_DELAY) {
 					// 2秒后传送玩家到指定坐标
-					player2.position = TELEPORT_POSITION;
+					player2.position = teleport_pos;
+                    have_teleported = true;
+                    for (int i = 0; i < enemy_h.size(); i++) {
+                        combatSystem.AddEnemy(&enemy_h[i]);
+                    }
 					// 可选：重置死亡时间标记，避免重复传送
 					// allEnemiesDeadTime = -1.0f;  // 如果只需要传送一次，取消注释
 				}
