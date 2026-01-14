@@ -11,6 +11,7 @@
 
 /*
 CombatSystem 类：管理射击系统和敌人命中检测
+命中判断逻辑，现在用最简单的射线-球体模型
 */
 class CombatSystem {
 public:
@@ -57,12 +58,12 @@ public:
         return enemies_;
     }
 
-    // 返回：是否成功射击（即鼠标左键被按下）
+    // 是否成功射击
     bool ProcessShootInput(GLFWwindow* window)
     {
         bool leftMousePressedNow = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
         
-        // 检测鼠标左键按下事件（从释放到按下）
+        // 检测鼠标左键按下
         if (leftMousePressedNow && !leftMousePressedLast_)
         {
             leftMousePressedLast_ = leftMousePressedNow;
@@ -156,11 +157,11 @@ private:
             std::cout << "Enemy killed" << std::endl;
         }
         
-        // 这里可以添加其他逻辑，有时间再说
+        // 这里可以添加其他逻辑，以后有时间再说
     }
 
 private:
-    Camera& camera_;                           // 摄像机引用（用于获取射线信息）
+    Camera& camera_;                           // 摄像机引用
     std::vector<Enemy*> enemies_;              // 敌人列表
     float maxShootDistance_;                   // 最大射击距离
     bool enableDebug_;                         // 是否启用调试信息

@@ -51,28 +51,23 @@ public:
         return m_Animations;
     }
 
-    // 获取第一个/默认动画，用于初始化
+    // 获取第一个默认动画，用于初始化
     std::shared_ptr<Animation> GetDefaultAnimation() const {
         if (m_Animations.empty()) return nullptr;
         return m_Animations.begin()->second;
     }
 
-    // --------------------------------------------------------
-    // Draw 方法重构
-    // --------------------------------------------------------
 
-    // 1. 继承自 ModelBase 的接口
-    // 如果直接调用这个，说明没有传入骨骼矩阵，默认绘制绑定姿态（单位矩阵）
     void Update(float deltaTime) override
     {
-        // 现在的 ModelAnimated 是无状态的资源，不需要 Update
+        // 不需要 Update
     }
 
     void Draw(Shader& shader, const glm::vec3& /*camPos*/) override
     {
         if (!m_Data) return;
 
-        // 默认填充单位矩阵，防止 shader 报错或模型变形
+        // 默认填充单位矩阵，防止之前 shader 报错或模型变形
         static const std::vector<glm::mat4> identityBones(100, glm::mat4(1.0f));
 
         for (size_t i = 0; i < identityBones.size(); ++i)
@@ -82,7 +77,7 @@ public:
         m_Data->DrawMeshes(shader);
     }
 
-    // 2. 新增：接收外部计算好的骨骼矩阵进行绘制
+    // 接收外部计算好的骨骼矩阵进行绘制
     void Draw(Shader& shader, const std::vector<glm::mat4>& finalBoneMatrices)
     {
         if (!m_Data) return;
@@ -90,7 +85,7 @@ public:
         size_t count = finalBoneMatrices.size();
         for (size_t i = 0; i < count; ++i)
         {
-            // 注意：这里建议优化，使用 Uniform Buffer Object (UBO) 或 Texture Buffer 传递骨骼矩阵性能更好
+            // 传递骨骼矩阵性能更好
             // 但为了保持当前代码风格，继续使用 setMat4
             shader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", finalBoneMatrices[i]);
         }

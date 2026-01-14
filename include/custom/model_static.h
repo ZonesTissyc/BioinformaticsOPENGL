@@ -73,11 +73,11 @@ private:
             }
         }
 
-        // 1️⃣ 不透明
+        // 不透明
         for (auto* m : opaqueMeshes)
             m->Draw(shader);
 
-        // 2️⃣ 透明
+        // 透明
         if (!transparentMeshes.empty())
         {
             std::sort(
@@ -102,7 +102,7 @@ private:
     {
         Assimp::Importer importer;
 
-        // 尝试多种 postprocess flag 的组合（你可以根据需要调整）
+        // 尝试多种 postprocess flag 的组合
         const aiScene* scene = importer.ReadFile(path,
             aiProcess_Triangulate |
             aiProcess_GenSmoothNormals |
@@ -198,7 +198,7 @@ private:
                 );
             }
 
-            // TexCoords (UV) + Tangent/Bitangent：先判空再访问
+            // TexCoords (UV) + Tangent/Bitangent
             if (mesh->mTextureCoords && mesh->mTextureCoords[0])
             {
                 // 有 UV
@@ -207,7 +207,6 @@ private:
                     mesh->mTextureCoords[0][i].y
                 );
 
-                // 切线/副切线可能为空
                 if (mesh->mTangents && mesh->mBitangents)
                 {
                     vertex.Tangent = glm::vec3(
@@ -234,23 +233,18 @@ private:
             vertices.push_back(vertex);
         }
 
-        // 2) 索引（faces）
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
             aiFace face = mesh->mFaces[i];
             if (face.mNumIndices == 0) continue;
-            // 通常我们期望三角形（aiProcess_Triangulate 已处理），如果不是三角形可选择跳过或处理
             if (face.mNumIndices != 3)
             {
-                // 记录并继续（安全起见）
-                // 你也可以把非三角形转成三角形
-                // cout << "[Model] Warning: face " << i << " has " << face.mNumIndices << " indices, skipping\n";
             }
             for (unsigned int j = 0; j < face.mNumIndices; j++)
                 indices.push_back(face.mIndices[j]);
         }
 
-        // 3) 材质 & 纹理
+        // 材质 & 纹理
         aiMaterial* material = nullptr;
         if (scene && mesh->mMaterialIndex < scene->mNumMaterials)
             material = scene->mMaterials[mesh->mMaterialIndex];
@@ -282,7 +276,7 @@ private:
             cout << "[Model] Warning: mesh.materialIndex invalid or material == nullptr\n";
         }
 
-        // 4) 读取材质颜色（可选）
+        // 读取材质颜色（可选）
         glm::vec4 meshColor(1.0f);
         if (material)
         {
@@ -334,7 +328,7 @@ private:
             aiString str;
             mat->GetTexture(type, i, &str);
 
-            // 查重（基于路径字符串）
+            // 查重
             bool skip = false;
             for (auto& t : textures_loaded)
             {

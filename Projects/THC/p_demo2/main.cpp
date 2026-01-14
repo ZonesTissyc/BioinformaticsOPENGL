@@ -10,7 +10,7 @@
 #include <vector>
 #include <algorithm>
 
-// 引入您项目中的自定义头文件
+// 引入自定义头文件
 #include <custom/InputController.h>
 #include <custom/Camera.h>
 #include <custom/window.h>
@@ -42,32 +42,22 @@ float lastFrame = 0.0f;
 int main() {
 
     #pragma region openGL 基础设置
-    // 1. 初始化窗口 (利用 custom/window.h)
-    // ------------------------------------
+
     Window window(1920, 1080, "OpenGL Scene - Sky & Ground Test");
 
-    // 2. 设置摄像机和输入控制 (利用 custom/Camera.h 和 InputController.h)
-    // ------------------------------------------------------------------
     Camera camera(glm::vec3(0.0f, 0.2f, 3.0f));
-    // 速度设为 2.5f, 鼠标灵敏度 0.1f
     InputController controller(camera, 0.5f, 0.1f);
-
-    // 3. 设置投影矩阵 (利用 custom/Projection.h)
-    // -----------------------------------------
     Projection projection(45.0f, 0.001f, 100.0f, 1920.0f, 1080.0f);
 
-    // 4. 编译着色器
-    // ------------------------------------
+    //  编译着色器
     std::string shaderDir = "../../../shaders/";
 
     // 使用 Blinn-Phong shader 渲染地面和静态模型
     Shader blinnPhongShader((shaderDir + "Blinn_phong.vs").c_str(), (shaderDir + "Blinn_phong.fs").c_str());
 
-    // 5. 设置地面顶点数据 (包含位置、法线、纹理坐标)
-    // ------------------------------------------------------------------
     // 地面法线向上 (0, 1, 0)
     float groundVertices[] = {
-        // 位置 (x, y, z)    法线 (nx, ny, nz)    纹理坐标 (u, v)
+        // 位置   法线 纹理坐标 
          25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
         -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  0.0f, 1.0f,
         -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
@@ -122,17 +112,17 @@ int main() {
     
     // 材质设置
     Renderer::Material groundMaterial(
-        glm::vec3(0.2f, 0.2f, 0.2f),  // ambient
-        glm::vec3(0.5f, 0.5f, 0.5f),  // specular
-        32.0f,                         // shininess
-        false                          // useTextureDiffuse1（地面使用material.texture_diffuse）
+        glm::vec3(0.2f, 0.2f, 0.2f), 
+        glm::vec3(0.5f, 0.5f, 0.5f),  
+        32.0f,                         
+        false                          
     );
     
     Renderer::Material modelMaterial(
-        glm::vec3(0.3f, 0.3f, 0.3f),  // ambient
-        glm::vec3(0.8f, 0.8f, 0.8f),  // specular
-        64.0f,                         // shininess
-        true                           // useTextureDiffuse1（模型使用texture_diffuse1）
+        glm::vec3(0.3f, 0.3f, 0.3f), 
+        glm::vec3(0.8f, 0.8f, 0.8f),  
+        64.0f,                        
+        true                       
     );
 
     #pragma endregion
@@ -143,13 +133,13 @@ int main() {
 
     #pragma endregion
 
-
+    #pragma region 模型加载
     std::string rootURL = R"(../../../)";
     std::string vsURL = rootURL + "shaders/anim_model.vs";
     std::string fsURL = rootURL + "shaders/anim_model.fs";
     Shader shader1(vsURL.c_str(), fsURL.c_str());
     stbi_set_flip_vertically_on_load(true);
-    // 使用 custom::Camera（不包含 learnopengl 的 camera.h，避免重定义）
+    // 使用 custom::Camera
    
     std::string glb1 = rootURL + "resources/model/npc-solder1/npc-solder1.glb";
     std::string glb2 = rootURL + "resources/model/major-solder/major-solder.glb";
@@ -160,7 +150,6 @@ int main() {
     std::string glb7 = "gltf_to_glb1.glb";
     std::string glb8 = rootURL + "resources/model/swimming_pool/swimming_pool_3d_scene.glb";
     std::string glb_house = rootURL + "resources/model/warehouse/warehouse.glb";
-    // 加载模型（骨骼）与动画（从同一 glb 文件读取）
     std::string glbPath = glb2;
 
     auto modelData = std::make_shared<ModelAnimData>(glbPath);
@@ -170,66 +159,81 @@ int main() {
     auto playerModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
     Character player2(playerModel.get(), &shader1, glm::vec3(-0.02f, -0.05f, -0.10f));
     
-    // 正确设置 player2 的缩放大小（Character::Draw() 会使用这个 scale）
     player2.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
     player2.yaw = -270.0f;
     player2.SetAction(Character::Action::Stay, false);
     controller.setCharacter(&player2);
-	// 创建 PlayController，第三个参数是移动速度（单位：单位/秒）
-	// 默认值是 2.5f，可以根据需要调整（例如：1.0f 更慢，5.0f 更快）
+
 	PlayController playController(&player2, camera, 0.15f);
 
 	controller.setPlayController(&playController);
 	controller.setCharacter(&player2);
 
-    // ============================
-    // 创建敌人对象（用于测试）
-    // ============================
-    // auto enemyModel = ModelAnimated::LoadModelWithAllAnimations(glbPath);
-    // 敌人位置：在玩家旁边，更容易看到
-    // 玩家位置是 (0.82f, 6.25f, -0.92f)，敌人放在玩家右侧前方
-    glm::vec3 enemyStartPos = glm::vec3(-0.31f, -0.05f, -0.39f);  // 起始位置
-    glm::vec3 patrolPointA = glm::vec3(-0.31f, -0.05f, -0.39f);   // 巡逻点 A（左侧）
-    glm::vec3 patrolPointB = glm::vec3(-0.28f, -0.05f, -1.14f);   // 巡逻点 B（右侧）
+
+    glm::vec3 enemyStartPos = glm::vec3(-0.31f, -0.05f, -0.39f);  
+    glm::vec3 patrolPointA = glm::vec3(-0.31f, -0.05f, -0.39f);   
+    glm::vec3 patrolPointB = glm::vec3(-0.28f, -0.05f, -1.14f);   
     
     Enemy enemy1(playerModel.get(), &shader1, 
-                enemyStartPos,                    // 位置：玩家右侧前方（更容易看到）
-                glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
-                0.1f,                             // 命中半径：0.5单位
-                patrolPointA,                     // 巡逻点 A
-                patrolPointB,                      // 巡逻点 B
-                true);                            // 启用巡逻
+                enemyStartPos,                    
+                glm::vec3(0.0f, 0.01f, 0.0f),     
+                0.1f,                             
+                patrolPointA,                   
+                patrolPointB,                    
+                true);                           
     enemy1.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
     enemy1.yaw = 0.0f;
     enemy1.speed = 0.05f;
-    enemy1.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
+    enemy1.SetAction(Character::Action::Walk, false);  
 
     // 2号敌人
-    glm::vec3 enemyStartPos2 = glm::vec3(0.29f, -0.05f, -0.50f);  // 起始位置
-    glm::vec3 patrolPointA2 = glm::vec3(0.29f, -0.05f, -0.43f);   // 巡逻点 A（左侧）
-    glm::vec3 patrolPointB2 = glm::vec3(0.29f, -0.05f, -1.16f);   // 巡逻点 B（右侧）
+    glm::vec3 enemyStartPos2 = glm::vec3(0.29f, -0.05f, -0.50f); 
+    glm::vec3 patrolPointA2 = glm::vec3(0.29f, -0.05f, -0.43f);   
+    glm::vec3 patrolPointB2 = glm::vec3(0.29f, -0.05f, -1.16f);  
 
     Enemy enemy2(playerModel.get(), &shader1,
-        enemyStartPos2,                    // 位置：玩家右侧前方（更容易看到）
-        glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
-        0.1f,                             // 命中半径：0.5单位
-        patrolPointA2,                     // 巡逻点 A
-        patrolPointB2,                      // 巡逻点 B
-        true);                            // 启用巡逻
+        enemyStartPos2,                   
+        glm::vec3(0.0f, 0.01f, 0.0f),      
+        0.1f,                           
+        patrolPointA2,                   
+        patrolPointB2,                      
+        true);                            
     enemy2.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
     enemy2.yaw = 0.0f;
     enemy2.speed = 0.05f;
-    enemy2.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
+    enemy2.SetAction(Character::Action::Walk, false);  
+
+    // h敌人
+    std::vector <Enemy> enemy_h;
+    std::vector <glm::vec3> enemySatrtHpos(4);
+    enemySatrtHpos[0] = glm::vec3(1.87f, -0.23f, 1.06f);
+    enemySatrtHpos[1] = glm::vec3(2.02f, -0.23f, 1.27f);
+    enemySatrtHpos[2] = glm::vec3(1.70f, -0.23f, 1.27f);
+    enemySatrtHpos[3] = glm::vec3(2.15f, -0.23f, 1.03f);
+    std::vector <float> enemyHyaws(4);
+    enemyHyaws[0] = 23.0f;
+    enemyHyaws[1] = 130.0f;
+    enemyHyaws[2] = -38.0f;
+    enemyHyaws[3] = -187.0f;
+    for (int i = 0; i < 4;i++) {
+        enemy_h.emplace_back(playerModel.get(), &shader1,
+            enemySatrtHpos[i],                  
+            glm::vec3(0.0f, 0.01f, 0.0f),    
+            0.1f);
+        enemy_h[i].setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+        enemy_h[i].yaw = enemyHyaws[i];
+        enemy_h[i].SetAction(Character::Action::Idle, false);
+    }
+
 
     
-    // ============================
     // 创建战斗系统
-    // ============================
+ 
     CombatSystem combatSystem(camera, 100.0f, true);  // 最大射击距离100，启用调试
     combatSystem.AddEnemy(&enemy1);  // 将敌人添加到战斗系统
     combatSystem.AddEnemy(&enemy2);
 
-    // 加载静态模型（使用 Blinn-Phong shader）
+    // 加载静态模型
     stbi_set_flip_vertically_on_load(false);
     std::string glbStatic = glb8;
 	auto modelStatic = std::make_shared<ModelStatic>(glbStatic);
@@ -241,6 +245,17 @@ int main() {
     ModelTrans transnatHouse;
     transnatHouse.scale(glm::vec3(1.0f) * 0.08f);
     transnatHouse.translate(glm::vec3(20.0f, 0.0f,20.0f));
+
+    // 加载赛马娘
+    stbi_set_flip_vertically_on_load(true);
+    std::string glb_mambo = rootURL + "resources/model/mambo/mambo.glb";
+    auto model_mambo = ModelAnimated::LoadModelWithAllAnimations(glb_mambo);
+    Character c_mambo(model_mambo.get(), &shader1, glm::vec3(2.02f, -0.23f, 1.17f));
+    c_mambo.setScale(glm::vec3(1.0f) * 0.05f);
+    c_mambo.yaw = 180.0f;
+
+    #pragma endregion
+
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
 
@@ -249,20 +264,19 @@ int main() {
     float dt = 0.0f;
     int timeforani = 0;
     
-    // ============================
-    // 敌人全部死亡检测和传送相关变量
-    // ============================
-    float allEnemiesDeadTime = -1.0f;  // 记录所有敌人死亡的时间，-1表示未全部死亡
-    const float TELEPORT_DELAY = 3.0f;  // 传送延迟时间（秒）
-    const glm::vec3 TELEPORT_POSITION = glm::vec3(0.85f, -0.24f, 1.06f);  // 传送目标坐标
+    // 传送相关变量
+    float allEnemiesDeadTime = -1.0f;  
+    const float teleport_delay = 3.0f;  // 传送延迟时间（秒）
+    const glm::vec3 teleport_pos = glm::vec3(1.30f, -0.23f, 0.97f);  // 传送目标坐标
+    bool have_teleported = false;
     
     // 检查所有敌人是否死亡的函数
     auto CheckAllEnemiesDead = [&enemy1, &enemy2]() -> bool {
         return enemy1.IsDead() && enemy2.IsDead();
     };
     
-    // 6. 渲染循环
-    // ------------------------------------------------------------------
+    #pragma region 帧循环
+
     while (window.noClose()) {
         // 计算帧时间
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -270,10 +284,10 @@ int main() {
         lastFrame = currentFrame;
         dt = timer.tick();
         
-        // 先更新ImGui（这样ImGui的IO状态会在处理鼠标输入时可用）
+        // 先更新ImGui
         iui.beginFrame();
         
-        // 处理输入（鼠标输入会检查ImGui是否想要捕获鼠标）
+        // 处理输入
         controller.processKeyboardInput(window.get(), dt);
         controller.processMouseInput(window.get());
 
@@ -287,7 +301,7 @@ int main() {
         glm::mat4 viewMat = camera.getView();
         glm::mat4 modelmat = glm::mat4(1.0f);
 
-        // --- 1. 绘制地面 (使用 Blinn-Phong 光照) ---
+        // 绘制地面
         blinnPhongShader.use();
         blinnPhongShader.setMat4("projection", projMat);
         blinnPhongShader.setMat4("view", viewMat);
@@ -309,39 +323,44 @@ int main() {
         // 绘制模型
 		Renderer::BeginScene(camera, projMat, shader1);
         player2.Update(deltaTime);
-		player2.Draw(shader1);  // Character::Draw() 内部会设置正确的 model 矩阵（包含 scale）
+		player2.Draw(shader1);  
+        c_mambo.Update(deltaTime);
+        c_mambo.Draw(shader1);
 		
 		// 更新并绘制敌人
 		enemy1.Update(deltaTime);
 		enemy1.Draw(shader1);
         enemy2.Update(deltaTime);
         enemy2.Draw(shader1);
-		
-		// ============================
-		// 处理射击输入（战斗系统）
-		// ============================
+        for (int i = 0; i < enemy_h.size(); i++) {
+            enemy_h[i].Update(deltaTime);
+            enemy_h[i].Draw(shader1);
+        }
+
+		// 处理射击输入
 		combatSystem.ProcessShootInput(window.get());
 		
-		// ============================
+
 		// 检查所有敌人是否死亡，并在2秒后传送玩家
-		// ============================
-		if (CheckAllEnemiesDead()) {
-			// 如果所有敌人都死亡了
+
+		if (CheckAllEnemiesDead() && !have_teleported) {
 			if (allEnemiesDeadTime < 0.0f) {
 				// 第一次检测到全部死亡，记录当前时间
 				allEnemiesDeadTime = currentFrame;
 			} else {
 				// 已经记录过死亡时间，检查是否过了2秒
 				float elapsedTime = currentFrame - allEnemiesDeadTime;
-				if (elapsedTime >= TELEPORT_DELAY) {
+				if (elapsedTime >= teleport_delay) {
 					// 2秒后传送玩家到指定坐标
-					player2.position = TELEPORT_POSITION;
-					// 可选：重置死亡时间标记，避免重复传送
-					// allEnemiesDeadTime = -1.0f;  // 如果只需要传送一次，取消注释
+					player2.position = teleport_pos;
+                    have_teleported = true;
+                    for (int i = 0; i < enemy_h.size(); i++) {
+                        combatSystem.AddEnemy(&enemy_h[i]);
+                    }
 				}
 			}
 		} else {
-			// 如果有敌人还活着，重置死亡时间标记
+			
 			allEnemiesDeadTime = -1.0f;
 		}
 
@@ -359,7 +378,7 @@ int main() {
         Renderer::Submit(blinnPhongShader, modelHouse.get(), transnatHouse.getModelMatrix());
         Renderer::EndScene();
 
-        // 显示UI（beginFrame已经在循环开始时调用了）
+        // 显示UI
         iui.showFPS(1.4f);
         iui.showPos(camera.getPos(), 1.2f);
         iui.drawCrosshair();
