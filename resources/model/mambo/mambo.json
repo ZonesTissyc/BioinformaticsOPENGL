@@ -1,0 +1,13 @@
+{
+    "version" : "1.0",
+    "description" : "赛马娘",
+    "files" : [
+        {
+            "typename" : "glb",
+            "filename" : "mambo.glb",
+            "url" : "https://alist.ztcdream.com/d/local/opengl/model/matikantenhauser.glb?sign=VAOM8ntA-X3UEaOouiojPDKEBMPyIDqHSTc3BabT7zA=:0",
+            "unzip" : false,
+            "from" : "https://sketchfab.com/3d-models/matikantenhauser-eff0cf74567f415984c1373f7a6c2707"
+        }
+    ]
+}
