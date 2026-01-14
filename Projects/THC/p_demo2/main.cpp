@@ -10,7 +10,7 @@
 #include <vector>
 #include <algorithm>
 
-// 引入您项目中的自定义头文件
+// 引入自定义头文件
 #include <custom/InputController.h>
 #include <custom/Camera.h>
 #include <custom/window.h>
@@ -49,7 +49,7 @@ int main() {
     InputController controller(camera, 0.5f, 0.1f);
     Projection projection(45.0f, 0.001f, 100.0f, 1920.0f, 1080.0f);
 
-    // 4. 编译着色器
+    //  编译着色器
     std::string shaderDir = "../../../shaders/";
 
     // 使用 Blinn-Phong shader 渲染地面和静态模型
@@ -57,7 +57,7 @@ int main() {
 
     // 地面法线向上 (0, 1, 0)
     float groundVertices[] = {
-        // 位置 (x, y, z)    法线 (nx, ny, nz)    纹理坐标 (u, v)
+        // 位置   法线 纹理坐标 
          25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
         -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  0.0f, 1.0f,
         -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
@@ -301,7 +301,7 @@ int main() {
         glm::mat4 viewMat = camera.getView();
         glm::mat4 modelmat = glm::mat4(1.0f);
 
-        // --- 1. 绘制地面 (使用 Blinn-Phong 光照) ---
+        // 绘制地面
         blinnPhongShader.use();
         blinnPhongShader.setMat4("projection", projMat);
         blinnPhongShader.setMat4("view", viewMat);
