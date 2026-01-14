@@ -47,11 +47,9 @@ int main() {
 
     Camera camera(glm::vec3(0.0f, 0.2f, 3.0f));
     InputController controller(camera, 0.5f, 0.1f);
-    // -----------------------------------------
     Projection projection(45.0f, 0.001f, 100.0f, 1920.0f, 1080.0f);
 
     // 4. 编译着色器
-    // ------------------------------------
     std::string shaderDir = "../../../shaders/";
 
     // 使用 Blinn-Phong shader 渲染地面和静态模型
@@ -135,7 +133,7 @@ int main() {
 
     #pragma endregion
 
-
+    #pragma region 模型加载
     std::string rootURL = R"(../../../)";
     std::string vsURL = rootURL + "shaders/anim_model.vs";
     std::string fsURL = rootURL + "shaders/anim_model.fs";
@@ -172,26 +170,26 @@ int main() {
 	controller.setCharacter(&player2);
 
 
-    glm::vec3 enemyStartPos = glm::vec3(-0.31f, -0.05f, -0.39f);  // 起始位置
-    glm::vec3 patrolPointA = glm::vec3(-0.31f, -0.05f, -0.39f);   // 巡逻点 A（左侧）
-    glm::vec3 patrolPointB = glm::vec3(-0.28f, -0.05f, -1.14f);   // 巡逻点 B（右侧）
+    glm::vec3 enemyStartPos = glm::vec3(-0.31f, -0.05f, -0.39f);  
+    glm::vec3 patrolPointA = glm::vec3(-0.31f, -0.05f, -0.39f);   
+    glm::vec3 patrolPointB = glm::vec3(-0.28f, -0.05f, -1.14f);   
     
     Enemy enemy1(playerModel.get(), &shader1, 
-                enemyStartPos,                    // 位置：玩家右侧前方（更容易看到）
-                glm::vec3(0.0f, 0.01f, 0.0f),      // 命中中心：在角色上方0.5单位（胸部/头部位置）
-                0.1f,                             // 命中半径：0.5单位
-                patrolPointA,                     // 巡逻点 A
-                patrolPointB,                      // 巡逻点 B
-                true);                            // 启用巡逻
+                enemyStartPos,                    
+                glm::vec3(0.0f, 0.01f, 0.0f),     
+                0.1f,                             
+                patrolPointA,                   
+                patrolPointB,                    
+                true);                           
     enemy1.setScale(glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
     enemy1.yaw = 0.0f;
     enemy1.speed = 0.05f;
-    enemy1.SetAction(Character::Action::Walk, false);  // 初始状态设为行走
+    enemy1.SetAction(Character::Action::Walk, false);  
 
     // 2号敌人
-    glm::vec3 enemyStartPos2 = glm::vec3(0.29f, -0.05f, -0.50f);  // 起始位置
-    glm::vec3 patrolPointA2 = glm::vec3(0.29f, -0.05f, -0.43f);   // 巡逻点 A（左侧）
-    glm::vec3 patrolPointB2 = glm::vec3(0.29f, -0.05f, -1.16f);   // 巡逻点 B（右侧）
+    glm::vec3 enemyStartPos2 = glm::vec3(0.29f, -0.05f, -0.50f); 
+    glm::vec3 patrolPointA2 = glm::vec3(0.29f, -0.05f, -0.43f);   
+    glm::vec3 patrolPointB2 = glm::vec3(0.29f, -0.05f, -1.16f);  
 
     Enemy enemy2(playerModel.get(), &shader1,
         enemyStartPos2,                   
@@ -208,10 +206,10 @@ int main() {
     // h敌人
     std::vector <Enemy> enemy_h;
     std::vector <glm::vec3> enemySatrtHpos(4);
-    enemySatrtHpos[0] = glm::vec3(1.87f, -0.22f, 1.06f);
-    enemySatrtHpos[1] = glm::vec3(2.02f, -0.22f, 1.27f);
-    enemySatrtHpos[2] = glm::vec3(1.70f, -0.22f, 1.27f);
-    enemySatrtHpos[3] = glm::vec3(2.15f, -0.22f, 1.03f);
+    enemySatrtHpos[0] = glm::vec3(1.87f, -0.23f, 1.06f);
+    enemySatrtHpos[1] = glm::vec3(2.02f, -0.23f, 1.27f);
+    enemySatrtHpos[2] = glm::vec3(1.70f, -0.23f, 1.27f);
+    enemySatrtHpos[3] = glm::vec3(2.15f, -0.23f, 1.03f);
     std::vector <float> enemyHyaws(4);
     enemyHyaws[0] = 23.0f;
     enemyHyaws[1] = 130.0f;
@@ -226,6 +224,7 @@ int main() {
         enemy_h[i].yaw = enemyHyaws[i];
         enemy_h[i].SetAction(Character::Action::Idle, false);
     }
+
 
     
     // 创建战斗系统
@@ -248,12 +247,15 @@ int main() {
     transnatHouse.translate(glm::vec3(20.0f, 0.0f,20.0f));
 
     // 加载赛马娘
+    stbi_set_flip_vertically_on_load(true);
     std::string glb_mambo = rootURL + "resources/model/mambo/mambo.glb";
-    auto modelManmbo = std::make_shared <ModelStatic>(glb_mambo);
-    ModelTrans transmatMambo;
-    transmatMambo.scale(glm::vec3(1.0f) *0.05f);
-    transmatMambo.rotate(90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-    transmatMambo.translate(glm::vec3(1.87f, -0.22f, 1.06f));
+    auto model_mambo = ModelAnimated::LoadModelWithAllAnimations(glb_mambo);
+    Character c_mambo(model_mambo.get(), &shader1, glm::vec3(2.02f, -0.23f, 1.17f));
+    c_mambo.setScale(glm::vec3(1.0f) * 0.05f);
+    c_mambo.yaw = 180.0f;
+
+    #pragma endregion
+
     // 计时
     float lastFrame = static_cast<float>(glfwGetTime());
 
@@ -262,10 +264,10 @@ int main() {
     float dt = 0.0f;
     int timeforani = 0;
     
-    // 敌人全部死亡检测和传送相关变量
+    // 传送相关变量
     float allEnemiesDeadTime = -1.0f;  
-    const float TELEPORT_DELAY = 3.0f;  // 传送延迟时间（秒）
-    const glm::vec3 teleport_pos = glm::vec3(1.30f, -0.24f, 0.97f);  // 传送目标坐标
+    const float teleport_delay = 3.0f;  // 传送延迟时间（秒）
+    const glm::vec3 teleport_pos = glm::vec3(1.30f, -0.23f, 0.97f);  // 传送目标坐标
     bool have_teleported = false;
     
     // 检查所有敌人是否死亡的函数
@@ -273,8 +275,8 @@ int main() {
         return enemy1.IsDead() && enemy2.IsDead();
     };
     
-    // 6. 渲染循环
-    // ------------------------------------------------------------------
+    #pragma region 帧循环
+
     while (window.noClose()) {
         // 计算帧时间
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -282,10 +284,10 @@ int main() {
         lastFrame = currentFrame;
         dt = timer.tick();
         
-        // 先更新ImGui（这样ImGui的IO状态会在处理鼠标输入时可用）
+        // 先更新ImGui
         iui.beginFrame();
         
-        // 处理输入（鼠标输入会检查ImGui是否想要捕获鼠标）
+        // 处理输入
         controller.processKeyboardInput(window.get(), dt);
         controller.processMouseInput(window.get());
 
@@ -321,7 +323,9 @@ int main() {
         // 绘制模型
 		Renderer::BeginScene(camera, projMat, shader1);
         player2.Update(deltaTime);
-		player2.Draw(shader1);  // Character::Draw() 内部会设置正确的 model 矩阵（包含 scale）
+		player2.Draw(shader1);  
+        c_mambo.Update(deltaTime);
+        c_mambo.Draw(shader1);
 		
 		// 更新并绘制敌人
 		enemy1.Update(deltaTime);
@@ -346,7 +350,7 @@ int main() {
 			} else {
 				// 已经记录过死亡时间，检查是否过了2秒
 				float elapsedTime = currentFrame - allEnemiesDeadTime;
-				if (elapsedTime >= TELEPORT_DELAY) {
+				if (elapsedTime >= teleport_delay) {
 					// 2秒后传送玩家到指定坐标
 					player2.position = teleport_pos;
                     have_teleported = true;
@@ -372,7 +376,6 @@ int main() {
 
 		Renderer::Submit(blinnPhongShader, modelStatic.get(), transmatStatic.getModelMatrix());
         Renderer::Submit(blinnPhongShader, modelHouse.get(), transnatHouse.getModelMatrix());
-        Renderer::Submit(shader1, modelManmbo.get(), transmatMambo.getModelMatrix());
         Renderer::EndScene();
 
         // 显示UI
